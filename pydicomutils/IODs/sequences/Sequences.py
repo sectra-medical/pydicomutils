@@ -695,6 +695,28 @@ class SoftcopyVOILUTSequence(SequenceInternal):
             # Add dataset to sequence
             self.sequence.append(ds)
 
+class GeneralSequence(SequenceInternal):
+    """General Sequence class
+    """
+    def __init__(self, sequence_data):
+        """Object initialization
+        Parameters
+        ----------
+        sequence_data : List of items with data to generate each sequence item,
+                        in the format of a list with a dictionary for each item,
+                        which in turn can contain a sequence, e.g. list of dictionaries
+        """
+        super().__init__()
+        for sequence_item in sequence_data:
+            # Initiate dataset
+            ds = Dataset()
+            # Set required DICOM attributes
+            
+            # Update and insert additional DICOM attributes as available
+            ds = update_and_insert_additional_DICOM_attributes_in_ds(ds, sequence_item)
+            # Add dataset to sequence
+            self.sequence.append(ds)
+
 def generate_sequence(sequence_name, sequence_data):
     """Helper function to generate appropriate sequences
     Parameters
@@ -745,5 +767,4 @@ def generate_sequence(sequence_name, sequence_data):
     elif sequence_name == "SoftcopyVOILUTSequence":
         return SoftcopyVOILUTSequence(sequence_data).get_sequence()
     else:
-        print(sequence_name, "is not supported")
-        return None
+        return GeneralSequence(sequence_data).get_sequence()

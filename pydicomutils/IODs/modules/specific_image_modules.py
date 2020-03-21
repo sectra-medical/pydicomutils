@@ -32,3 +32,45 @@ class CTImageModule(Module):
                                           "RescaleType",
                                           "KVP",
                                           "AcquisitionNumber"]
+
+class WholeSlideMicroscopySeriesModule(Module):
+    """Whole Slide Microscopy Series Module class
+    """
+    def __init__(self):
+        super().__init__()
+        self.required_dicom_attributes = []
+
+class WholeSlideMicroscopyImageModule(Module):
+    """Whole Slide Microscopy Image Module Class
+    """
+    def __init__(self):
+        super().__init__()
+        self.required_dicom_attributes = ["ImageType",
+                                          "ImagedVolumeWidth",
+                                          "ImagedVolumeHeight",
+                                          "ImagedVolumeDepth",
+                                          "TotalPixelMatrixColumns",
+                                          "TotalPixelMatrixRows",
+                                          "TotalPixelMatrixOriginSequence",
+                                          "ImageOrientationSlide",
+                                          "SamplesPerPixel",
+                                          "PhotometricInterpretation",
+                                          "NumberOfFrames",
+                                          "BitsAllocated",
+                                          "BitsStored",
+                                          "HighBit",
+                                          "AcquisitionDateTime",
+                                          "AcquisitionDuration",
+                                          "LossyImageCompression",
+                                          "VolumetricProperties",
+                                          "SpecimenLabelInImage",
+                                          "BurnedInAnnotation",
+                                          "FocusMethod",
+                                          "ExtendedDepthOfField"]
+
+class OpticalPathModule(Module):
+    """Optical Path Module Class
+    """
+    def __init__(self):
+        super().__init__()
+        self.required_dicom_attributes = ["OpticalPathSequence"]

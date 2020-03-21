@@ -92,6 +92,16 @@ class GeneralEquipmentModule(Module):
         super().__init__()
         self.required_dicom_attributes = ["Manufacturer"]
 
+class EnhancedGeneralEquipmentModule(Module):
+    """Enhanced General Equipment Module class
+    """
+    def __init__(self):
+        super().__init__()
+        self.required_dicom_attributes = ["Manufacturer",
+                                          "ManufacturerModelName",
+                                          "DeviceSerialNumber",
+                                          "SoftwareVersions"]
+
 class SOPCommonModule(Module):
     """SOP Common Module class
     """
@@ -163,3 +173,46 @@ class ImagePlaneModule(Module):
                                           "ImageOrientationPatient",
                                           "ImagePositionPatient",
                                           "SliceThickness"]
+
+class AcquisitionContextModule(Module):
+    """Acquisition Context Module Class
+    """
+    def __init__(self):
+        super().__init__()
+        self.required_dicom_attributes = ["AcquisitionContextSequence"]
+
+class MultiFrameFunctionalGroupsModule(Module):
+    """Multi-frame Functional Groups Module Class
+    """
+    def __init__(self):
+        super().__init__()
+        self.required_dicom_attributes = ["SharedFunctionalGroupsSequence",
+                                          "InstanceNumber",
+                                          "ContentDate",
+                                          "ContentTime",
+                                          "NumberOfFrames"]
+
+class MultiFrameDimensionModule(Module):
+    """Multi-frame Dimension Module Class
+    """
+    def __init__(self):
+        super().__init__()
+        self.required_dicom_attributes = ["DimensionOrganizationSequence",
+                                          "DimensionIndexSequence"]
+
+class SpecimenModule(Module):
+    """Specimen Module Class
+    """
+    def __init__(self):
+        super().__init__()
+        self.required_dicom_attributes = ["ContainerIdentifier",
+                                          "IssuerOfTheContainerIdentifierSequence",
+                                          "ContainerTypeCodeSequence",
+                                          "SpecimenDescriptionSequence"]
+
+class CommonInstanceReferenceModule(Module):
+    """Common Instance Reference Module Class
+    """
+    def __init__(self):
+        super().__init__()
+        self.required_dicom_attributes = []
