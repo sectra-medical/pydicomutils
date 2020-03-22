@@ -1,5 +1,5 @@
 # LIDC-IDRI
-The contained in this folder has been downloaded from https://www.cancerimagingarchive.net/. Detailed information about the dataset and its use can be found at https://wiki.cancerimagingarchive.net/display/Public/LIDC-IDRI. The annotations come from https://wiki.cancerimagingarchive.net/display/DOI/Standardized+representation+of+the+TCIA+LIDC-IDRI+annotations+using+DICOM.
+The contained data in this folder has been downloaded from https://www.cancerimagingarchive.net/. Detailed information about the dataset and its use can be found at https://wiki.cancerimagingarchive.net/display/Public/LIDC-IDRI. The annotations come from https://wiki.cancerimagingarchive.net/display/DOI/Standardized+representation+of+the+TCIA+LIDC-IDRI+annotations+using+DICOM.
 
 For full access to the datasets, please visit the above listed urls.
 
