@@ -12,6 +12,7 @@ from .modules.general_modules import MultiFrameFunctionalGroupsModule, MultiFram
 from .modules.specific_image_modules import WholeSlideMicroscopySeriesModule, WholeSlideMicroscopyImageModule 
 from .modules.specific_image_modules import OpticalPathModule
 from .sequences.Sequences import generate_sequence
+from pydicomutils.misc.external.icc_profiles.icc_profiles import get_sRGB_icc_profile
 
 class WSMImage(IOD):
     """Implementation of the WSM Image IOD
@@ -100,7 +101,6 @@ class WSMImage(IOD):
                 ]
             }
         ])
-        
         self.dataset.PerFrameFunctionalGroupsSequence = generate_sequence("PerFrameFunctionalGroupsSequence", [
             {
                 "PlanePositionSlideSequence": [
@@ -172,6 +172,7 @@ class WSMImage(IOD):
         self.dataset.FocusMethod = "AUTO"
         self.dataset.ExtendedDepthOfField = "NO"
         # Optical Path
+        self.dataset.NumberOfOpticalPaths = 1
         self.dataset.OpticalPathSequence = generate_sequence("OpticalPathSequence", [
             {
                 "OpticalPathIdentifier": "1",
@@ -229,7 +230,7 @@ class WSMImage(IOD):
             del self.dataset.PresentationLUTShape
             del self.dataset.RescaleIntercept
             del self.dataset.RescaleSlope
-            self.dataset.OpticalPathSequence[0].ICCProfile = get_rgb_icc_profile()
+            self.dataset.OpticalPathSequence[0].ICCProfile = get_sRGB_icc_profile()
         if pixel_spacing is None:
             pixel_spacing = [1.0, 1.0]
         if slice_thickness is None:
@@ -300,8 +301,8 @@ class WSMImage(IOD):
                         {
                             "PlanePositionSlideSequence": [
                                 {
-                                    "XOffsetInSlideCoordinateSystem": col_ind * tile_size[0] * pixel_spacing[0],
-                                    "YOffsetInSlideCoordinateSystem": col_ind * tile_size[1] * pixel_spacing[1],
+                                    "XOffsetInSlideCoordinateSystem": float(str(col_ind * tile_size[0] * pixel_spacing[0])[0:16]),
+                                    "YOffsetInSlideCoordinateSystem": float(str(col_ind * tile_size[1] * pixel_spacing[1])[0:16]),
                                     "ZOffsetInSlideCoordinateSystem": 0.0,
                                     "ColumnPositionInTotalImagePixelMatrix": col_ind * tile_size[1] + 1, 
                                     "RowPositionInTotalImagePixelMatrix": row_ind * tile_size[0] + 1
@@ -313,12 +314,4 @@ class WSMImage(IOD):
             self.dataset.NumberOfFrames = number_of_frames
             self.dataset.PixelData = byte_array
             self.dataset.PerFrameFunctionalGroupsSequence = generate_sequence("PerFrameFunctionalGroupsSequence", 
-                                                                              per_frame_function_groups_sequence_data)
-
-def get_rgb_icc_profile():
-    file_folder = os.path.dirname(os.path.realpath(__file__))
-    rgb_icc_profile = None
-    with open(os.path.join(file_folder, "icc_profile_rgb.icc"), "rb") as f:
-        rgb_icc_profile = f.read()
-    return rgb_icc_profile
-    
+                                                                              per_frame_function_groups_sequence_data)    

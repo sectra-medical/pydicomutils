@@ -2,3 +2,5 @@
 __pycache__
 output
 pydicomutils.egg-info
+examples/data/wsi_images/image_to_encode_as_dicom.jpg
+*.log

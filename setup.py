@@ -26,7 +26,8 @@ setup_args = dict(
         "imageio",
         "scikit-image",
         "pandas",
-        "colormath"
+        "colormath",
+        "requests"
     ]
 )
 
