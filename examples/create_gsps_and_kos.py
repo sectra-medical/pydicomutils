@@ -1,34 +1,49 @@
 import os
 import shutil
 import glob
+import logging
+
 from pydicom import read_file
 from pydicomutils.misc.color import WHITE, PURPLE, ORANGE, BLUE
 from pydicomutils.misc.dcm_io_helper import read_and_sort_dicom_files
 from pydicomutils.IODs.GSPS import GSPS
 from pydicomutils.IODs.KOS import KOS
 
-if __name__ == "__main__":
+# Create logger
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+file_handler = logging.FileHandler("pydicomutils_examples.log")
+formatter = logging.Formatter("%(asctime)s : %(levelname)s : %(name)s : %(message)s")
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
+stream_handler = logging.StreamHandler()
+stream_handler.setFormatter(formatter)
+logger.addHandler(stream_handler)
+
+def run():
+    logger.info("Starting")
     file_folder = os.path.dirname(os.path.realpath(__file__))
     output_folder = os.path.join(file_folder, "output")
     os.makedirs(output_folder, exist_ok=True)
 
-    # set output folder
+    # Set output folder
     output_folder = os.path.join(output_folder, "data", "ct_images", "gsps_and_kos")
     os.makedirs(output_folder, exist_ok=True)
 
-    # find original images
+    # Find original images
     input_folder = os.path.join(file_folder, "data", "ct_images", "original_dicom_images")
     dcm_files = glob.glob(os.path.join(input_folder,"*.dcm"))
     sorted_dcm_files = read_and_sort_dicom_files(dcm_files, return_dcm_files=True)
     
-    # copy original images to output folder
+    # Copy original images to output folder
     ds = read_file(dcm_files[0])
     dcm_folder = os.path.join(output_folder, "series_" + str(ds.SeriesNumber))
     os.makedirs(dcm_folder, exist_ok=True)
     for dcm_file in dcm_files:
         shutil.copy(dcm_file, dcm_folder)
     
-    # create GSPS objects
+    # Create GSPS objects
+    logger.info("GSPS")
     gsps = GSPS()
     gsps.create_empty_iod()
     gsps.initiate(sorted_dcm_files)
@@ -84,7 +99,8 @@ if __name__ == "__main__":
                             "pr.dcm")
     gsps.write_to_file(output_file, write_like_original=False)
 
-    # create KOS objects
+    # Create KOS objects
+    logger.info("KOS")
     kos = KOS()
     kos.create_empty_iod()
     kos.initiate(dcm_files)
@@ -98,3 +114,6 @@ if __name__ == "__main__":
                                 "series_" + str(kos.dataset.SeriesNumber).zfill(3), 
                                 "kos.dcm")
     kos.write_to_file(output_file, write_like_original=False)
+
+if __name__ == "__main__":
+    run()

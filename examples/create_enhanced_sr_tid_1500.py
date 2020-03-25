@@ -2,9 +2,23 @@ import os
 import glob
 import pandas
 from datetime import datetime
+import logging
+
 from pydicomutils.IODs.EnhancedSRTID1500 import EnhancedSRTID1500
 
-if __name__ == "__main__":
+# Create logger
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+file_handler = logging.FileHandler("pydicomutils_examples.log")
+formatter = logging.Formatter("%(asctime)s : %(levelname)s : %(name)s : %(message)s")
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
+stream_handler = logging.StreamHandler()
+stream_handler.setFormatter(formatter)
+logger.addHandler(stream_handler)
+
+def run():
+    logger.info("Starting")
     file_folder = os.path.dirname(os.path.realpath(__file__))
     output_folder = os.path.join(file_folder, "output")
     os.makedirs(output_folder, exist_ok=True)
@@ -16,15 +30,18 @@ if __name__ == "__main__":
     patient_ids = df_data_entries["PatientID"].unique()
 
     for patient_id in patient_ids[0:1]:
+        logger.info("Processing patient: " + str(patient_id))
         patient_df = df_data_entries[df_data_entries["PatientID"] == patient_id]
         study_ids = patient_df["FollowUp"].unique()
         for study_id in study_ids[0:1]:
+            logger.info("Study: " + str(study_id))
             study_df = patient_df[patient_df["FollowUp"] == study_id]
             study_id = str(patient_id).zfill(6) + str(study_id).zfill(4)
             study_folder = os.path.join(output_folder, "data", "cr_images", "output", study_id)
             referenced_dcm_files = glob.glob(os.path.join(study_folder,"series_001","*.dcm"))
 
             # Create Enhanced SR TID 1500 adding a guessed clavicle location
+            logger.info("Enhanced SR TID 1500")
             enhanced_sr = EnhancedSRTID1500()
             enhanced_sr.create_empty_iod()
             enhanced_sr.initiate(referenced_dcm_files)
@@ -42,3 +59,6 @@ if __name__ == "__main__":
                                     "series_" + str(enhanced_sr.dataset.SeriesNumber).zfill(3), 
                                     "sr.dcm")
             enhanced_sr.write_to_file(output_file)
+
+if __name__ == "__main__":
+    run()

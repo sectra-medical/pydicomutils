@@ -3,9 +3,22 @@ import glob
 import pandas
 from datetime import datetime
 import imageio
+import logging
+
 from pydicomutils.IODs.CRImage import CRImage
 from pydicomutils.IODs.GSPS import GSPS
 from pydicomutils.IODs.BasicSRText import BasicSRText
+
+# Create logger
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+file_handler = logging.FileHandler("pydicomutils_examples.log")
+formatter = logging.Formatter("%(asctime)s : %(levelname)s : %(name)s : %(message)s")
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
+stream_handler = logging.StreamHandler()
+stream_handler.setFormatter(formatter)
+logger.addHandler(stream_handler)
 
 def create_points_for_rectangle(x, y, width, height):
     """Simple helper function to create points for a rectangle
@@ -33,7 +46,8 @@ def create_points_for_rectangle(x, y, width, height):
     
     return points
 
-if __name__ == "__main__":
+def run():
+    logger.info("Starting")
     file_folder = os.path.dirname(os.path.realpath(__file__))
     output_folder = os.path.join(file_folder, "output")
     os.makedirs(output_folder, exist_ok=True)
@@ -45,12 +59,15 @@ if __name__ == "__main__":
     patient_ids = df_data_entries["PatientID"].unique()
 
     for patient_id in patient_ids:
+        logger.info("Processing patient: " + str(patient_id))
         patient_df = df_data_entries[df_data_entries["PatientID"] == patient_id]
         study_ids = patient_df["FollowUp"].unique()
         for study_id in study_ids:
+            logger.info("Study: " + str(study_id))
             study_df = patient_df[patient_df["FollowUp"] == study_id]
 
             # Create CR image
+            logger.info("CR")
             cr_image = CRImage()
             cr_image.create_empty_iod()
             cr_image.initiate()
@@ -86,6 +103,7 @@ if __name__ == "__main__":
             referenced_dcm_files = glob.glob(os.path.join(study_folder,"**","*.dcm"), recursive=True)
 
             # Create Basic Text SR
+            logger.info("Basic Text SR")
             basic_text_sr = BasicSRText()
             basic_text_sr.create_empty_iod()
             basic_text_sr.initiate(referenced_dcm_files=referenced_dcm_files)
@@ -104,6 +122,7 @@ if __name__ == "__main__":
             
             # Create GSPS
             if study_df.iloc[0]["ImageIndex"] in df_bbox_entries["ImageIndex"].unique():
+                logger.info("GSPS")
                 bbox_df = df_bbox_entries[df_bbox_entries["ImageIndex"] == study_df.iloc[0]["ImageIndex"]]
                 bbox_x = bbox_df.iloc[0]["BBoxX"]
                 bbox_y = bbox_df.iloc[0]["BBoxY"]
@@ -131,3 +150,6 @@ if __name__ == "__main__":
                                             "series_" + str(gsps.dataset.SeriesNumber).zfill(3), 
                                             "pr.dcm")
                 gsps.write_to_file(output_file, write_like_original=False)
+
+if __name__ == "__main__":
+    run()

@@ -3,32 +3,47 @@ import numpy as np
 import SimpleITK as sitk
 import random
 from datetime import datetime
+import logging
+
 from pydicom import uid
+
 from pydicomutils.IODs.CTImage import CTImage
 
-if __name__ == "__main__":
+# Create logger
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+file_handler = logging.FileHandler("pydicomutils_examples.log")
+formatter = logging.Formatter("%(asctime)s : %(levelname)s : %(name)s : %(message)s")
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
+stream_handler = logging.StreamHandler()
+stream_handler.setFormatter(formatter)
+logger.addHandler(stream_handler)
+
+def run():
+    logger.info("Starting")
     file_folder = os.path.dirname(os.path.realpath(__file__))
     output_folder = os.path.join(file_folder, "output")
     os.makedirs(output_folder, exist_ok=True)
 
-    # set output folder
+    # Set output folder
     study_folder = os.path.join(output_folder, "data", "ct_images", "converted_images")
     os.makedirs(study_folder, exist_ok=True)
 
-    # original file to convert
+    # Original file to convert
     original_image_file = os.path.join(file_folder, "data", "ct_images", "non_dicom", "LIDC-IDRI-0001_CT.nrrd")
 
-    # load data from image file
+    # Load data from image file
     img = sitk.ReadImage(original_image_file)
     arr = sitk.GetArrayFromImage(img)
     arr = np.swapaxes(arr, 0, 1)
     arr = np.swapaxes(arr, 1, 2)
 
-    # get orientation and position vectors
+    # Get orientation and position vectors
     img_position = img.GetOrigin()
     img_orientation = img.GetDirection()
 
-    # set reusable metadata
+    # Set reusable metadata
     patient_id = ''.join(random.choice('0123456789ABCDEF') for i in range(16))
     study_instance_uid = uid.generate_uid()
     study_id = ''.join(random.choice('0123456789ABCDEF') for i in range(16))
@@ -45,7 +60,8 @@ if __name__ == "__main__":
     body_part_examined = "PELVIS"
     patient_position = ""
 
-    # initiate metadata on instance level
+    # Initiate metadata on instance level
+    logger.info("CT")
     instance_no = 0
     for slice_ind in range(0, img.GetSize()[2]):
         instance_no += 1
@@ -86,3 +102,6 @@ if __name__ == "__main__":
                                    "series_" + str(ct_image.dataset.SeriesNumber).zfill(3), 
                                    str(ct_image.dataset.InstanceNumber).zfill(6) + ".dcm")
         ct_image.write_to_file(output_file)
+
+if __name__ == "__main__":
+    run()

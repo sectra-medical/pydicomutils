@@ -3,35 +3,51 @@ import glob
 from shutil import copy
 from datetime import datetime
 import numpy as np
+import logging
+
 from pydicom import read_file
+
 from pydicomutils.IODs.EnhancedSRTID1500 import EnhancedSRTID1500
 
-if __name__ == "__main__":
+# Create logger
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+file_handler = logging.FileHandler("pydicomutils_examples.log")
+formatter = logging.Formatter("%(asctime)s : %(levelname)s : %(name)s : %(message)s")
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
+stream_handler = logging.StreamHandler()
+stream_handler.setFormatter(formatter)
+logger.addHandler(stream_handler)
+
+def run():
+    logger.info("Starting")
     file_folder = os.path.dirname(os.path.realpath(__file__))
     output_folder = os.path.join(file_folder, "output")
     os.makedirs(output_folder, exist_ok=True)
 
-    # find original images
+    # Find original images
     input_folder = os.path.join(file_folder, "data", "ct_images", "original_dicom_images")
     referenced_dcm_files = glob.glob(os.path.join(input_folder,"*.dcm"))
 
-    # set output folder
+    # Set output folder
     output_folder = os.path.join(output_folder, "data", "ct_images", "linear_measurements")
 
-    # copy original images to output folder
+    # Copy original images to output folder
     ds = read_file(referenced_dcm_files[0])
     dcm_folder = os.path.join(output_folder, "series_" + str(ds.SeriesNumber))
     os.makedirs(dcm_folder, exist_ok=True)
     for dcm_file in referenced_dcm_files:
         copy(dcm_file, dcm_folder)
 
-    # create dict of dicom objects
+    # Create dict of dicom objects
     sop_instance_uid_to_dcm_file = dict()
     for dcm_file in referenced_dcm_files:
         ds = read_file(dcm_file)
         sop_instance_uid_to_dcm_file[ds.SOPInstanceUID] = dcm_file
 
-    # create enhaned SR objects according to TID 1500 with linear measurements    
+    # Create enhaned SR objects according to TID 1500 with linear measurements
+    logger.info("Enhanced SR TID 1500")
     enhanced_sr = EnhancedSRTID1500()
     enhanced_sr.create_empty_iod()
     enhanced_sr.initiate(referenced_dcm_files)
@@ -59,3 +75,6 @@ if __name__ == "__main__":
                             "series_" + str(enhanced_sr.dataset.SeriesNumber).zfill(3), 
                             "sr.dcm")
     enhanced_sr.write_to_file(output_file)
+
+if __name__ == "__main__":
+    run()
