@@ -1,5 +1,12 @@
 from .general_modules import Module
 
+class SCEquipmentModule(Module):
+    """SC Equipment Module class
+    """
+    def __init__(self):
+        super().__init__()
+        self.required_dicom_attributes = ["ConversionType"]
+
 class CRSeriesModule(Module):
     """CR Series Module class
     """
@@ -32,6 +39,13 @@ class CTImageModule(Module):
                                           "RescaleType",
                                           "KVP",
                                           "AcquisitionNumber"]
+
+class SCImageModule(Module):
+    """SC Image Module class
+    """
+    def __init__(self):
+        super().__init__()
+        self.required_dicom_attributes = ["PixelSpacing"]
 
 class WholeSlideMicroscopySeriesModule(Module):
     """Whole Slide Microscopy Series Module class

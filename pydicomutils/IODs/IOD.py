@@ -16,6 +16,7 @@ class IODTypes(Enum):
     """
     CRImage =     "1.2.840.10008.5.1.4.1.1.1"
     CTImage =     "1.2.840.10008.5.1.4.1.1.2"
+    SCImage =     "1.2.840.10008.5.1.4.1.1.7"
     GSPS =        "1.2.840.10008.5.1.4.1.1.11.1"
     CSPS =        "1.2.840.10008.5.1.4.1.1.11.2"
     BasicTextSR = "1.2.840.10008.5.1.4.1.1.88.11"
@@ -28,6 +29,7 @@ class IODTypes(Enum):
 SOP_CLASS_UID_MODALITY_DICT = {
     IODTypes.CRImage: "CR",
     IODTypes.CTImage: "CT",
+    IODTypes.SCImage: "SC",
     IODTypes.GSPS: "PR",
     IODTypes.CSPS: "PR",
     IODTypes.BasicTextSR: "SR",
@@ -115,7 +117,7 @@ class IOD:
                     module.copy_optional_dicom_attributes(dataset_to_copy_from, 
                                                           self.dataset)
 
-        if self.iod_type in [IODTypes.CRImage, IODTypes.CTImage, IODTypes.WSMImage]:
+        if self.iod_type in [IODTypes.CRImage, IODTypes.CTImage, IODTypes.SCImage, IODTypes.WSMImage]:
             general_image_modules = [GeneralImageModule(),
                                      GeneralSeriesModule(),
                                      ImagePixelModule()]
@@ -151,7 +153,7 @@ class IOD:
         self.dataset.SOPClassUID = self.iod_type.value
         self.dataset.SOPInstanceUID = uid.generate_uid()
 
-        if self.iod_type in [IODTypes.CRImage, IODTypes.CTImage, IODTypes.WSMImage]:
+        if self.iod_type in [IODTypes.CRImage, IODTypes.CTImage, IODTypes.SCImage, IODTypes.WSMImage]:
             # general series module
             self.dataset.Modality = SOP_CLASS_UID_MODALITY_DICT[self.iod_type]
             self.dataset.SeriesInstanceUID = uid.generate_uid()
