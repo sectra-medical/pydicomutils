@@ -497,7 +497,7 @@ class GraphicAnnotationSequence(SequenceInternal):
             # Initiate dataset
             ds = Dataset()
             # Set required DICOM attributes
-            ds.GrahpicLayer = "DEFAULT"
+            ds.GraphicLayer = "DEFAULT"
              # Update and insert additional DICOM attributes as available
             ds = update_and_insert_additional_DICOM_attributes_in_ds(ds, sequence_item)
             # Add dataset to sequence
@@ -665,8 +665,8 @@ class GraphicLayerSequence(SequenceInternal):
             # Initiate dataset
             ds = Dataset()
             # Set required DICOM attributes
-            ds.GrahpicLayer = "DEFAULT"
-            ds.GrahpicOrder = "1"
+            ds.GraphicLayer = "DEFAULT"
+            ds.GraphicOrder = "1"
             # Update and insert additional DICOM attributes as available
             ds = update_and_insert_additional_DICOM_attributes_in_ds(ds, sequence_item)
             # Add dataset to sequence
