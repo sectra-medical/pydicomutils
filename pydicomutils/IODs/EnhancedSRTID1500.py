@@ -1,4 +1,4 @@
-
+import os
 import random
 from datetime import datetime
 
@@ -10,9 +10,11 @@ from .modules.specific_sr_modules import SRDocumentContentModule
 from .sequences.Sequences import generate_sequence, generate_CRPES_sequence, update_and_insert_additional_DICOM_attributes_in_ds
 from .sequences.Sequences import generate_reference_sop_sequence_json
 
+
 class EnhancedSRTID1500(IOD):
     """Implementation of the Basic SR Text IOD
     """
+
     def __init__(self):
         super().__init__(IODTypes.EnhancedSR)
 
@@ -62,7 +64,7 @@ class EnhancedSRTID1500(IOD):
             self.dataset.PatientID = ds.PatientID
             self.dataset.PatientName = ds.PatientName
             self.dataset.PatientSex = ds.PatientSex
-            self.dataset.PatientBirthDate = ds.PatientBirthDate
+            self.dataset.PatientBirthDate = ds.PatientBirthDate if "PatientBirthDate" in ds else ""
             self.dataset.StudyInstanceUID = ds.StudyInstanceUID
             self.dataset.StudyID = ds.StudyID
             self.dataset.AccessionNumber = ds.AccessionNumber
@@ -80,7 +82,8 @@ class EnhancedSRTID1500(IOD):
         self.dataset.ContentDate = datetime.now().strftime("%Y%m%d")
         self.dataset.ContentTime = datetime.now().strftime("%H%M%S")
         if referenced_dcm_files:
-            self.dataset.CurrentRequestedProcedureEvidenceSequence = generate_CRPES_sequence(referenced_dcm_files)
+            self.dataset.CurrentRequestedProcedureEvidenceSequence = generate_CRPES_sequence(
+                referenced_dcm_files)
         self.dataset.PreliminaryFlag = "FINAL"
         # sr document content module
         self.dataset.ValueType = "CONTAINER"
@@ -91,7 +94,7 @@ class EnhancedSRTID1500(IOD):
         self.dataset.ContentTemplateSequence = generate_sequence("ContentTemplateSequence", [{
             "MappingResource": "DCMR",
             "MappingResourceUID": "1.2.840.10008.8.1.1",
-            "TemplateIdentifier": "1500" }])
+            "TemplateIdentifier": "1500"}])
         self.dataset.ContinuityOfContent = "SEPARATE"
         self.dataset.ContentSequence = generate_sequence("ContentSequence", [
             {
@@ -184,7 +187,7 @@ class EnhancedSRTID1500(IOD):
         return ds
 
     def initiate_content_sequence(self, tracking_id, tracking_uid,
-            finding, finding_site):
+                                  finding, finding_site):
         """Initiate a content sequence
 
         Arguments:
@@ -249,31 +252,31 @@ class EnhancedSRTID1500(IOD):
                 continue
             if "text_value" in item:
                 ds.ContentSequence.append(update_and_insert_additional_DICOM_attributes_in_ds(Dataset(),
-                    {
-                        "RelationshipType": "CONTAINS",
-                        "ValueType": "TEXT",
-                        "ConceptNameCodeSequence": [{
-                                "CodeValue": "C00034375",
-                                "CodingSchemeDesignator": "UMLS",
-                                "CodeMeaning": "Qualitative Evaluations"
-                            }],
-                        "TextValue": item["text_value"]
-                    }))
+                                                                                              {
+                    "RelationshipType": "CONTAINS",
+                    "ValueType": "TEXT",
+                    "ConceptNameCodeSequence": [{
+                        "CodeValue": "C00034375",
+                        "CodingSchemeDesignator": "UMLS",
+                        "CodeMeaning": "Qualitative Evaluations"
+                    }],
+                    "TextValue": item["text_value"]
+                }))
             else:
                 ds.ContentSequence.append(update_and_insert_additional_DICOM_attributes_in_ds(Dataset(),
-                    {
-                        "RelationshipType": "CONTAINS",
-                        "ValueType": "CODE",
-                        "ConceptNameCodeSequence": [{
-                                "CodeValue": "C00034375",
-                                "CodingSchemeDesignator": "UMLS",
-                                "CodeMeaning": "Qualitative Evaluations"
-                            }],
-                        "ConceptCodeSequence": [{
-                            "CodeValue": item["code_value"][0],
-                            "CodingSchemeDesignator": item["code_value"][1],
-                            "CodeMeaning": item["code_value"][2]}]
-                    }))
+                                                                                              {
+                    "RelationshipType": "CONTAINS",
+                    "ValueType": "CODE",
+                    "ConceptNameCodeSequence": [{
+                        "CodeValue": "C00034375",
+                        "CodingSchemeDesignator": "UMLS",
+                        "CodeMeaning": "Qualitative Evaluations"
+                    }],
+                    "ConceptCodeSequence": [{
+                        "CodeValue": item["code_value"][0],
+                        "CodingSchemeDesignator": item["code_value"][1],
+                        "CodeMeaning": item["code_value"][2]}]
+                }))
         return ds
 
     def add_coded_values(self, ds, coded_values):
@@ -287,18 +290,18 @@ class EnhancedSRTID1500(IOD):
             if item is None:
                 continue
             ds.ContentSequence.append(update_and_insert_additional_DICOM_attributes_in_ds(Dataset(),
-                {
-                    "RelationshipType": "HAS CONCEPT MOD",
-                    "ValueType": "CODE",
-                    "ConceptNameCodeSequence": [{
-                            "CodeValue": item["ConceptNameCode"][0],
-                            "CodingSchemeDesignator": item["ConceptNameCode"][1],
-                            "CodeMeaning": item["ConceptNameCode"][2]}],
-                    "ConceptCodeSequence": [{
-                        "CodeValue": item["ConceptCode"][0],
-                        "CodingSchemeDesignator": item["ConceptCode"][1],
-                        "CodeMeaning": item["ConceptCode"][2]}]
-                }))
+                                                                                          {
+                "RelationshipType": "HAS CONCEPT MOD",
+                "ValueType": "CODE",
+                "ConceptNameCodeSequence": [{
+                    "CodeValue": item["ConceptNameCode"][0],
+                    "CodingSchemeDesignator": item["ConceptNameCode"][1],
+                    "CodeMeaning": item["ConceptNameCode"][2]}],
+                "ConceptCodeSequence": [{
+                    "CodeValue": item["ConceptCode"][0],
+                    "CodingSchemeDesignator": item["ConceptCode"][1],
+                    "CodeMeaning": item["ConceptCode"][2]}]
+            }))
         return ds
 
     def add_text_values(self, ds, text_values):
@@ -312,21 +315,21 @@ class EnhancedSRTID1500(IOD):
             if item is None:
                 continue
             ds.ContentSequence.append(update_and_insert_additional_DICOM_attributes_in_ds(Dataset(),
-                {
-                    "RelationshipType": "HAS CONCEPT MOD",
-                    "ValueType": "CODE",
-                    "ConceptNameCodeSequence": [{
-                            "CodeValue": item["ConceptNameCode"][0],
-                            "CodingSchemeDesignator": item["ConceptNameCode"][1],
-                            "CodeMeaning": item["ConceptNameCode"][2]}],
-                    "TextValue": item["TextValue"]
-                }))
+                                                                                          {
+                "RelationshipType": "HAS CONCEPT MOD",
+                "ValueType": "CODE",
+                "ConceptNameCodeSequence": [{
+                    "CodeValue": item["ConceptNameCode"][0],
+                    "CodingSchemeDesignator": item["ConceptNameCode"][1],
+                    "CodeMeaning": item["ConceptNameCode"][2]}],
+                "TextValue": item["TextValue"]
+            }))
         return ds
 
     def add_landmark(self, dcm_file, graphic_data,
-        finding, finding_site,
-        tracking_id=None, tracking_uid=None,
-        qualitative_evaluations=None, coded_values=None, text_values=None):
+                     finding, finding_site,
+                     tracking_id=None, tracking_uid=None,
+                     qualitative_evaluations=None, coded_values=None, text_values=None):
         """Add landmark value
 
         Arguments:
@@ -340,42 +343,43 @@ class EnhancedSRTID1500(IOD):
             tracking_uid {[type]} -- [description] (default: {None})
         """
         if not tracking_id:
-            tracking_id = ''.join(random.choice('0123456789ABCDEF') for i in range(16))
+            tracking_id = ''.join(random.choice('0123456789ABCDEF')
+                                  for i in range(16))
         if not tracking_uid:
             tracking_uid = uid.generate_uid()
         ds_ref = read_file(dcm_file)
         ds = self.initiate_measurement_group()
         ds.ContentSequence = self.initiate_content_sequence(tracking_id, tracking_uid,
-            finding, finding_site)
+                                                            finding, finding_site)
         if coded_values is not None:
             ds = self.add_coded_values(ds, coded_values)
         ds.ContentSequence.append(update_and_insert_additional_DICOM_attributes_in_ds(Dataset(),
-            {
-                "RelationshipType": "CONTAINS",
-                "ValueType": "CODE",
-                "ConceptNameCodeSequence": [{
-                    "CodeValue": "758637006",
-                    "CodingSchemeDesignator": "SCT",
-                    "CodeMeaning": "Anatomical locations"}],
-                "ConceptCodeSequence": [{
-                    "CodeValue": "26216008",
-                    "CodingSchemeDesignator": "SCT",
-                    "CodeMeaning": "Center"}],
+                                                                                      {
+            "RelationshipType": "CONTAINS",
+            "ValueType": "CODE",
+            "ConceptNameCodeSequence": [{
+                "CodeValue": "758637006",
+                "CodingSchemeDesignator": "SCT",
+                "CodeMeaning": "Anatomical locations"}],
+            "ConceptCodeSequence": [{
+                "CodeValue": "26216008",
+                "CodingSchemeDesignator": "SCT",
+                "CodeMeaning": "Center"}],
+            "ContentSequence": [{
+                "RelationshipType": "INFERRED FROM",
+                "ValueType": "SCOORD",
                 "ContentSequence": [{
-                    "RelationshipType": "INFERRED FROM",
-                    "ValueType": "SCOORD",
-                    "ContentSequence": [{
-                        "ReferencedSOPSequence": [{
-                            "ReferencedSOPClassUID": ds_ref.SOPClassUID,
-                            "ReferencedSOPInstanceUID": ds_ref.SOPInstanceUID
-                        }],
-                        "RelationshipType": "SELECTED FROM",
-                        "ValueType": "IMAGE" # value type
+                    "ReferencedSOPSequence": [{
+                        "ReferencedSOPClassUID": ds_ref.SOPClassUID,
+                        "ReferencedSOPInstanceUID": ds_ref.SOPInstanceUID
                     }],
-                    "GraphicData": graphic_data,
-                    "GraphicType": "POINT",
-                }]
-            }))
+                    "RelationshipType": "SELECTED FROM",
+                    "ValueType": "IMAGE"  # value type
+                }],
+                "GraphicData": graphic_data,
+                "GraphicType": "POINT",
+            }]
+        }))
         if text_values is not None:
             ds = self.add_text_values(ds, text_values)
         if qualitative_evaluations is not None:
@@ -383,8 +387,8 @@ class EnhancedSRTID1500(IOD):
         self.dataset.ContentSequence[3].ContentSequence.append(ds)
 
     def add_unmeasurable_measurement(self, dcm_file, graphic_data,
-        finding, finding_site, reason,
-        tracking_id=None, tracking_uid=None):
+                                     finding, finding_site, reason,
+                                     tracking_id=None, tracking_uid=None):
         """Add an unmeasurable measurement
 
         Arguments:
@@ -398,45 +402,46 @@ class EnhancedSRTID1500(IOD):
             tracking_uid {[type]} -- [description] (default: {None})
         """
         if not tracking_id:
-            tracking_id = ''.join(random.choice('0123456789ABCDEF') for i in range(16))
+            tracking_id = ''.join(random.choice('0123456789ABCDEF')
+                                  for i in range(16))
         if not tracking_uid:
             tracking_uid = uid.generate_uid()
         ds_ref = read_file(dcm_file)
         ds = self.initiate_measurement_group()
         ds.ContentSequence = self.initiate_content_sequence(tracking_id, tracking_uid,
-            finding, finding_site)
+                                                            finding, finding_site)
         ds.ContentSequence.append(update_and_insert_additional_DICOM_attributes_in_ds(Dataset(),
-            {
-                "RelationshipType": "CONTAINS",
-                "ValueType": "TEXT",
-                "ConceptNameCodeSequence": [{
-                        "CodeValue": "C00034375",
-                        "CodingSchemeDesignator": "UMLS",
-                        "CodeMeaning": "Qualitative Evaluations"
-                    }],
-                "TextValue": reason,
+                                                                                      {
+            "RelationshipType": "CONTAINS",
+            "ValueType": "TEXT",
+            "ConceptNameCodeSequence": [{
+                "CodeValue": "C00034375",
+                "CodingSchemeDesignator": "UMLS",
+                "CodeMeaning": "Qualitative Evaluations"
+            }],
+            "TextValue": reason,
+            "ContentSequence": [{
+                "RelationshipType": "INFERRED FROM",
+                "ValueType": "SCOORD",
                 "ContentSequence": [{
-                    "RelationshipType": "INFERRED FROM",
-                    "ValueType": "SCOORD",
-                    "ContentSequence": [{
-                        "ReferencedSOPSequence": [{
-                            "ReferencedSOPClassUID": ds_ref.SOPClassUID,
-                            "ReferencedSOPInstanceUID": ds_ref.SOPInstanceUID
-                        }],
-                        "RelationshipType": "SELECTED FROM",
-                        "ValueType": "IMAGE" # value type
+                    "ReferencedSOPSequence": [{
+                        "ReferencedSOPClassUID": ds_ref.SOPClassUID,
+                        "ReferencedSOPInstanceUID": ds_ref.SOPInstanceUID
                     }],
-                    "GraphicData": graphic_data,
-                    "GraphicType": "CIRCLE",
-                }]
-            }))
+                    "RelationshipType": "SELECTED FROM",
+                    "ValueType": "IMAGE"  # value type
+                }],
+                "GraphicData": graphic_data,
+                "GraphicType": "CIRCLE",
+            }]
+        }))
         self.dataset.ContentSequence[3].ContentSequence.append(ds)
 
     def add_linear_measurement_single_axis(self,
-        dcm_file, linear_measurement, graphic_data,
-        measurement_type, finding, finding_site,
-        tracking_id=None, tracking_uid=None,
-        qualitative_evaluations=None, coded_values=None, text_values=None):
+                                           dcm_ref, linear_measurement, graphic_data,
+                                           measurement_type, finding, finding_site,
+                                           tracking_id=None, tracking_uid=None,
+                                           qualitative_evaluations=None, coded_values=None, text_values=None):
         """Add linear measurement
 
         Arguments:
@@ -448,46 +453,57 @@ class EnhancedSRTID1500(IOD):
             finding_site {[type]} -- [description]
         """
         if not tracking_id:
-            tracking_id = ''.join(random.choice('0123456789ABCDEF') for i in range(16))
+            tracking_id = ''.join(random.choice('0123456789ABCDEF')
+                                  for i in range(16))
         if not tracking_uid:
             tracking_uid = uid.generate_uid()
-        ds_ref = read_file(dcm_file)
+        referenced_sop_sequence = None
+        if isinstance(dcm_ref, str):
+            ds_ref = read_file(dcm_ref)
+            referenced_sop_sequence = [{
+                "ReferencedSOPClassUID": ds_ref.SOPClassUID,
+                "ReferencedSOPInstanceUID": ds_ref.SOPInstanceUID
+            }]
+        else:
+            referenced_sop_sequence = [{
+                "ReferencedSOPClassUID": dcm_ref.ReferencedSOPClassUID,
+                "ReferencedSOPInstanceUID": dcm_ref.ReferencedSOPInstanceUID
+            }]
+            if "ReferencedFrameNumber" in dcm_ref:
+                referenced_sop_sequence[0]["ReferencedFrameNumber"] = dcm_ref.ReferencedFrameNumber
         ds = self.initiate_measurement_group()
         ds.ContentSequence = self.initiate_content_sequence(tracking_id, tracking_uid,
-            finding, finding_site)
+                                                            finding, finding_site)
         if coded_values is not None:
             ds = self.add_coded_values(ds, coded_values)
         ds.ContentSequence.append(update_and_insert_additional_DICOM_attributes_in_ds(Dataset(),
-            {
-                "RelationshipType": "CONTAINS",
-                "ValueType": "NUM",
-                "ConceptNameCodeSequence": [{
-                    "CodeValue": measurement_type[0],
-                    "CodingSchemeDesignator": measurement_type[1],
-                    "CodeMeaning": measurement_type[2]}],
-                "MeasuredValueSequence": [{
-                    "MeasurementUnitsCodeSequence": [{
-                        "CodeValue": "mm",
-                        "CodingSchemeDesignator": "UCUM",
-                        "CodeMeaning": "millimeter"
-                    }],
-                    "NumericValue": linear_measurement
+                                                                                      {
+            "RelationshipType": "CONTAINS",
+            "ValueType": "NUM",
+            "ConceptNameCodeSequence": [{
+                "CodeValue": measurement_type[0],
+                "CodingSchemeDesignator": measurement_type[1],
+                "CodeMeaning": measurement_type[2]}],
+            "MeasuredValueSequence": [{
+                "MeasurementUnitsCodeSequence": [{
+                    "CodeValue": "mm",
+                    "CodingSchemeDesignator": "UCUM",
+                    "CodeMeaning": "millimeter"
                 }],
+                "NumericValue": linear_measurement
+            }],
+            "ContentSequence": [{
+                "RelationshipType": "INFERRED FROM",
+                "ValueType": "SCOORD",
                 "ContentSequence": [{
-                    "RelationshipType": "INFERRED FROM",
-                    "ValueType": "SCOORD",
-                    "ContentSequence": [{
-                        "ReferencedSOPSequence": [{
-                            "ReferencedSOPClassUID": ds_ref.SOPClassUID,
-                            "ReferencedSOPInstanceUID": ds_ref.SOPInstanceUID
-                        }],
-                        "RelationshipType": "SELECTED FROM",
-                        "ValueType": "IMAGE" # value type
-                    }],
-                    "GraphicData": graphic_data,
-                    "GraphicType": "POLYLINE",
-                }]
-            }))
+                    "ReferencedSOPSequence": referenced_sop_sequence,
+                    "RelationshipType": "SELECTED FROM",
+                    "ValueType": "IMAGE"  # value type
+                }],
+                "GraphicData": graphic_data,
+                "GraphicType": "POLYLINE",
+            }]
+        }))
         if text_values is not None:
             ds = self.add_text_values(ds, text_values)
         if qualitative_evaluations is not None:
@@ -495,11 +511,11 @@ class EnhancedSRTID1500(IOD):
         self.dataset.ContentSequence[3].ContentSequence.append(ds)
 
     def add_linear_measurement_double_axis(self,
-        dcm_file,
-        linear_measurement_axis1, graphic_data_axis1, measurement_type_axis1,
-        linear_measurement_axis2, graphic_data_axis2, measurement_type_axis2,
-        finding, finding_site, tracking_id=None, tracking_uid=None,
-        qualitative_evaluations=None, coded_values=None, text_values=None):
+                                           dcm_file,
+                                           linear_measurement_axis1, graphic_data_axis1, measurement_type_axis1,
+                                           linear_measurement_axis2, graphic_data_axis2, measurement_type_axis2,
+                                           finding, finding_site, tracking_id=None, tracking_uid=None,
+                                           qualitative_evaluations=None, coded_values=None, text_values=None):
         """Add linear measurement with two axis
 
         Arguments:
@@ -516,77 +532,78 @@ class EnhancedSRTID1500(IOD):
             tracking_uid {[type]} -- [description]
         """
         if not tracking_id:
-            tracking_id = ''.join(random.choice('0123456789ABCDEF') for i in range(16))
+            tracking_id = ''.join(random.choice('0123456789ABCDEF')
+                                  for i in range(16))
         if not tracking_uid:
             tracking_uid = uid.generate_uid()
         ds_ref = read_file(dcm_file)
         ds = self.initiate_measurement_group()
         ds.ContentSequence = self.initiate_content_sequence(tracking_id, tracking_uid,
-            finding, finding_site)
+                                                            finding, finding_site)
         if coded_values is not None:
             ds = self.add_coded_values(ds, coded_values)
         ds.ContentSequence.append(update_and_insert_additional_DICOM_attributes_in_ds(Dataset(),
-            {
-               "RelationshipType": "CONTAINS",
-                "ValueType": "NUM",
-                "ConceptNameCodeSequence": [{
-                    "CodeValue": measurement_type_axis1[0],
-                    "CodingSchemeDesignator": measurement_type_axis1[1],
-                    "CodeMeaning": measurement_type_axis1[2]}],
-                "MeasuredValueSequence": [{
-                    "MeasurementUnitsCodeSequence": [{
-                        "CodeValue": "mm",
-                        "CodingSchemeDesignator": "UCUM",
-                        "CodeMeaning": "millimeter"
-                    }],
-                    "NumericValue": linear_measurement_axis1
+                                                                                      {
+            "RelationshipType": "CONTAINS",
+            "ValueType": "NUM",
+            "ConceptNameCodeSequence": [{
+                "CodeValue": measurement_type_axis1[0],
+                "CodingSchemeDesignator": measurement_type_axis1[1],
+                "CodeMeaning": measurement_type_axis1[2]}],
+            "MeasuredValueSequence": [{
+                "MeasurementUnitsCodeSequence": [{
+                    "CodeValue": "mm",
+                    "CodingSchemeDesignator": "UCUM",
+                    "CodeMeaning": "millimeter"
                 }],
+                "NumericValue": linear_measurement_axis1
+            }],
+            "ContentSequence": [{
+                "RelationshipType": "INFERRED FROM",
+                "ValueType": "SCOORD",
                 "ContentSequence": [{
-                    "RelationshipType": "INFERRED FROM",
-                    "ValueType": "SCOORD",
-                    "ContentSequence": [{
-                        "ReferencedSOPSequence": [{
-                            "ReferencedSOPClassUID": ds_ref.SOPClassUID,
-                            "ReferencedSOPInstanceUID": ds_ref.SOPInstanceUID
-                        }],
-                        "RelationshipType": "SELECTED FROM",
-                        "ValueType": "IMAGE" # value type
+                    "ReferencedSOPSequence": [{
+                        "ReferencedSOPClassUID": ds_ref.SOPClassUID,
+                        "ReferencedSOPInstanceUID": ds_ref.SOPInstanceUID
                     }],
-                    "GraphicData": graphic_data_axis1,
-                    "GraphicType": "POLYLINE",
-                }]
-            }))
+                    "RelationshipType": "SELECTED FROM",
+                    "ValueType": "IMAGE"  # value type
+                }],
+                "GraphicData": graphic_data_axis1,
+                "GraphicType": "POLYLINE",
+            }]
+        }))
         ds.ContentSequence.append(update_and_insert_additional_DICOM_attributes_in_ds(Dataset(),
-            {
-               "RelationshipType": "CONTAINS",
-                "ValueType": "NUM",
-                "ConceptNameCodeSequence": [{
-                    "CodeValue": measurement_type_axis2[0],
-                    "CodingSchemeDesignator": measurement_type_axis2[1],
-                    "CodeMeaning": measurement_type_axis2[2]}],
-                "MeasuredValueSequence": [{
-                    "MeasurementUnitsCodeSequence": [{
-                        "CodeValue": "mm",
-                        "CodingSchemeDesignator": "UCUM",
-                        "CodeMeaning": "millimeter"
-                    }],
-                    "NumericValue": linear_measurement_axis2
+                                                                                      {
+            "RelationshipType": "CONTAINS",
+            "ValueType": "NUM",
+            "ConceptNameCodeSequence": [{
+                "CodeValue": measurement_type_axis2[0],
+                "CodingSchemeDesignator": measurement_type_axis2[1],
+                "CodeMeaning": measurement_type_axis2[2]}],
+            "MeasuredValueSequence": [{
+                "MeasurementUnitsCodeSequence": [{
+                    "CodeValue": "mm",
+                    "CodingSchemeDesignator": "UCUM",
+                    "CodeMeaning": "millimeter"
                 }],
+                "NumericValue": linear_measurement_axis2
+            }],
+            "ContentSequence": [{
+                "RelationshipType": "INFERRED FROM",
+                "ValueType": "SCOORD",
                 "ContentSequence": [{
-                    "RelationshipType": "INFERRED FROM",
-                    "ValueType": "SCOORD",
-                    "ContentSequence": [{
-                        "ReferencedSOPSequence": [{
-                            "ReferencedSOPClassUID": ds_ref.SOPClassUID,
-                            "ReferencedSOPInstanceUID": ds_ref.SOPInstanceUID
-                        }],
-                        "RelationshipType": "SELECTED FROM",
-                        "ValueType": "IMAGE" # value type
+                    "ReferencedSOPSequence": [{
+                        "ReferencedSOPClassUID": ds_ref.SOPClassUID,
+                        "ReferencedSOPInstanceUID": ds_ref.SOPInstanceUID
                     }],
-                    "GraphicData": graphic_data_axis2,
-                    "GraphicType": "POLYLINE",
-                }]
-            }))
+                    "RelationshipType": "SELECTED FROM",
+                    "ValueType": "IMAGE"  # value type
+                }],
+                "GraphicData": graphic_data_axis2,
+                "GraphicType": "POLYLINE",
+            }]
+        }))
         if text_values is not None:
             ds = self.add_text_values(ds, text_values)
         if qualitative_evaluations is not None:
@@ -594,9 +611,9 @@ class EnhancedSRTID1500(IOD):
         self.dataset.ContentSequence[3].ContentSequence.append(ds)
 
     def add_volume_measurement(self,
-        seg_dcm_file, dcm_file, volume_measurement, segment_number, graphic_data,
-        finding, finding_site, tracking_id=None, tracking_uid=None,
-        qualitative_evaluations=None, coded_values=None, text_values=None):
+                               seg_dcm_file, dcm_file, volume_measurement, segment_number, graphic_data,
+                               finding, finding_site, tracking_id=None, tracking_uid=None,
+                               qualitative_evaluations=None, coded_values=None, text_values=None):
         """Add volume measurement
 
         Arguments:
@@ -617,78 +634,79 @@ class EnhancedSRTID1500(IOD):
         """
 
         if not tracking_id:
-            tracking_id = ''.join(random.choice('0123456789ABCDEF') for i in range(16))
+            tracking_id = ''.join(random.choice('0123456789ABCDEF')
+                                  for i in range(16))
         if not tracking_uid:
             tracking_uid = uid.generate_uid()
         ds_ref_seg = read_file(seg_dcm_file)
         ds_ref = read_file(dcm_file)
         ds = self.initiate_measurement_group()
         ds.ContentSequence = self.initiate_content_sequence(tracking_id, tracking_uid,
-            finding, finding_site)
+                                                            finding, finding_site)
         if coded_values is not None:
             ds = self.add_coded_values(ds, coded_values)
         ds.ContentSequence.append(update_and_insert_additional_DICOM_attributes_in_ds(Dataset(),
-            {
+                                                                                      {
+            "ReferencedSOPSequence": [{
+                "ReferencedSOPClassUID": ds_ref_seg.SOPClassUID,
+                "ReferencedSOPInstanceUID": ds_ref_seg.SOPInstanceUID,
+                "ReferencedSegmentNumber": segment_number
+            }],
+            "RelationshipType": "CONTAINS",
+            "ValueType": "IMAGE",
+            "ConceptNameCodeSequence": [{
+                "CodeValue": "121191",
+                "CodingSchemeDesignator": "DCM",
+                "CodeMeaning": "Referenced Segment"}],
+        }
+        ))
+        ds.ContentSequence.append(update_and_insert_additional_DICOM_attributes_in_ds(Dataset(),
+                                                                                      {
+            "RelationshipType": "CONTAINS",
+            "ValueType": "UIDREF",
+            "ConceptNameCodeSequence": [{
+                "CodeValue": "121232",
+                "CodingSchemeDesignator": "DCM",
+                "CodeMeaning": "Source series for segmentation"}],
+            "UID": ds_ref_seg.ReferencedSeriesSequence[0].SeriesInstanceUID
+        }
+        ))
+        ds.ContentSequence.append(update_and_insert_additional_DICOM_attributes_in_ds(Dataset(),
+                                                                                      {
+            "RelationshipType": "CONTAINS",
+            "ValueType": "NUM",
+            "ConceptNameCodeSequence": [{
+                "CodeValue": "118565006",
+                "CodingSchemeDesignator": "SCT",
+                "CodeMeaning": "Volume"}],
+            "MeasuredValueSequence": [{
+                "MeasurementUnitsCodeSequence": [{
+                    "CodeValue": "mm3",
+                    "CodingSchemeDesignator": "UCUM",
+                    "CodeMeaning": "cubic millimeter"
+                }],
+                "NumericValue": volume_measurement
+            }]
+        }))
+        ds.ContentSequence.append(update_and_insert_additional_DICOM_attributes_in_ds(Dataset(),
+                                                                                      {
+            "RelationshipType": "CONTAINS",
+            "ValueType": "SCOORD",
+            "ConceptNameCodeSequence": [{
+                "CodeValue": "111010",
+                "CodingSchemeDesignator": "DCM",
+                "CodeMeaning": "Center"}],
+            "ContentSequence": [{
                 "ReferencedSOPSequence": [{
-                    "ReferencedSOPClassUID": ds_ref_seg.SOPClassUID,
-                    "ReferencedSOPInstanceUID": ds_ref_seg.SOPInstanceUID,
-                    "ReferencedSegmentNumber": segment_number
+                    "ReferencedSOPClassUID": ds_ref.SOPClassUID,
+                    "ReferencedSOPInstanceUID": ds_ref.SOPInstanceUID
                 }],
-                "RelationshipType": "CONTAINS",
-                "ValueType": "IMAGE",
-                "ConceptNameCodeSequence": [{
-                    "CodeValue": "121191",
-                    "CodingSchemeDesignator": "DCM",
-                    "CodeMeaning": "Referenced Segment"}],
-            }
-        ))
-        ds.ContentSequence.append(update_and_insert_additional_DICOM_attributes_in_ds(Dataset(),
-            {
-                "RelationshipType": "CONTAINS",
-                "ValueType": "UIDREF",
-                "ConceptNameCodeSequence": [{
-                    "CodeValue": "121232",
-                    "CodingSchemeDesignator": "DCM",
-                    "CodeMeaning": "Source series for segmentation"}],
-                "UID": ds_ref_seg.ReferencedSeriesSequence[0].SeriesInstanceUID
-            }
-        ))
-        ds.ContentSequence.append(update_and_insert_additional_DICOM_attributes_in_ds(Dataset(),
-            {
-                "RelationshipType": "CONTAINS",
-                "ValueType": "NUM",
-                "ConceptNameCodeSequence": [{
-                    "CodeValue": "118565006",
-                    "CodingSchemeDesignator": "SCT",
-                    "CodeMeaning": "Volume"}],
-                "MeasuredValueSequence": [{
-                    "MeasurementUnitsCodeSequence": [{
-                        "CodeValue": "mm3",
-                        "CodingSchemeDesignator": "UCUM",
-                        "CodeMeaning": "cubic millimeter"
-                    }],
-                    "NumericValue": volume_measurement
-                }]
-            }))
-        ds.ContentSequence.append(update_and_insert_additional_DICOM_attributes_in_ds(Dataset(),
-            {
-                "RelationshipType": "CONTAINS",
-                "ValueType": "SCOORD",
-                "ConceptNameCodeSequence": [{
-                    "CodeValue": "111010",
-                    "CodingSchemeDesignator": "DCM",
-                    "CodeMeaning": "Center"}],
-                "ContentSequence": [{
-                    "ReferencedSOPSequence": [{
-                        "ReferencedSOPClassUID": ds_ref.SOPClassUID,
-                        "ReferencedSOPInstanceUID": ds_ref.SOPInstanceUID
-                    }],
-                    "RelationshipType": "SELECTED FROM",
-                    "ValueType": "IMAGE" # value type
-                }],
-                "GraphicData": graphic_data,
-                "GraphicType": "POINT",
-            }))
+                "RelationshipType": "SELECTED FROM",
+                "ValueType": "IMAGE"  # value type
+            }],
+            "GraphicData": graphic_data,
+            "GraphicType": "POINT",
+        }))
         if text_values is not None:
             ds = self.add_text_values(ds, text_values)
         if qualitative_evaluations is not None:
@@ -696,12 +714,12 @@ class EnhancedSRTID1500(IOD):
         self.dataset.ContentSequence[3].ContentSequence.append(ds)
 
     def add_volume_and_linear_measurement_single_axis(self,
-        seg_dcm_file, dcm_file, volume_measurement, segment_number, graphic_data_center,
-        linear_measurement, graphic_data_linear_measurement, measurement_type,
-        finding, finding_site, tracking_id=None, tracking_uid=None,
-        qualitative_evaluations=None, coded_values=None, text_values=None):
+                                                      seg_dcm_file, dcm_file, volume_measurement, segment_number, graphic_data_center,
+                                                      linear_measurement, graphic_data_linear_measurement, measurement_type,
+                                                      finding, finding_site, tracking_id=None, tracking_uid=None,
+                                                      qualitative_evaluations=None, coded_values=None, text_values=None):
         """Add volume measurement with a single axis distance measurement
-        
+
         Arguments:
             seg_dcm_file {[type]} -- [description]
             dcm_file {[type]} -- [description]
@@ -720,109 +738,110 @@ class EnhancedSRTID1500(IOD):
         """
 
         if not tracking_id:
-            tracking_id = ''.join(random.choice('0123456789ABCDEF') for i in range(16))
+            tracking_id = ''.join(random.choice('0123456789ABCDEF')
+                                  for i in range(16))
         if not tracking_uid:
             tracking_uid = uid.generate_uid()
         ds_ref_seg = read_file(seg_dcm_file)
         ds_ref = read_file(dcm_file)
         ds = self.initiate_measurement_group()
         ds.ContentSequence = self.initiate_content_sequence(tracking_id, tracking_uid,
-            finding, finding_site)
+                                                            finding, finding_site)
         if coded_values is not None:
             ds = self.add_coded_values(ds, coded_values)
         ds.ContentSequence.append(update_and_insert_additional_DICOM_attributes_in_ds(Dataset(),
-            {
-                "ReferencedSOPSequence": [{
-                    "ReferencedSOPClassUID": ds_ref_seg.SOPClassUID,
-                    "ReferencedSOPInstanceUID": ds_ref_seg.SOPInstanceUID,
-                    "ReferencedSegmentNumber": segment_number
+                                                                                      {
+            "ReferencedSOPSequence": [{
+                "ReferencedSOPClassUID": ds_ref_seg.SOPClassUID,
+                "ReferencedSOPInstanceUID": ds_ref_seg.SOPInstanceUID,
+                "ReferencedSegmentNumber": segment_number
+            }],
+            "RelationshipType": "CONTAINS",
+            "ValueType": "IMAGE",
+            "ConceptNameCodeSequence": [{
+                "CodeValue": "121191",
+                "CodingSchemeDesignator": "DCM",
+                "CodeMeaning": "Referenced Segment"}],
+        }
+        ))
+        ds.ContentSequence.append(update_and_insert_additional_DICOM_attributes_in_ds(Dataset(),
+                                                                                      {
+            "RelationshipType": "CONTAINS",
+            "ValueType": "UIDREF",
+            "ConceptNameCodeSequence": [{
+                "CodeValue": "121232",
+                "CodingSchemeDesignator": "DCM",
+                "CodeMeaning": "Source series for segmentation"}],
+            "UID": ds_ref_seg.ReferencedSeriesSequence[0].SeriesInstanceUID
+        }
+        ))
+        ds.ContentSequence.append(update_and_insert_additional_DICOM_attributes_in_ds(Dataset(),
+                                                                                      {
+            "RelationshipType": "CONTAINS",
+            "ValueType": "NUM",
+            "ConceptNameCodeSequence": [{
+                "CodeValue": "118565006",
+                "CodingSchemeDesignator": "SCT",
+                "CodeMeaning": "Volume"}],
+            "MeasuredValueSequence": [{
+                "MeasurementUnitsCodeSequence": [{
+                    "CodeValue": "mm3",
+                    "CodingSchemeDesignator": "UCUM",
+                    "CodeMeaning": "cubic millimeter"
                 }],
-                "RelationshipType": "CONTAINS",
-                "ValueType": "IMAGE",
-                "ConceptNameCodeSequence": [{
-                    "CodeValue": "121191",
-                    "CodingSchemeDesignator": "DCM",
-                    "CodeMeaning": "Referenced Segment"}],
-            }
-        ))
+                "NumericValue": volume_measurement
+            }]
+        }))
         ds.ContentSequence.append(update_and_insert_additional_DICOM_attributes_in_ds(Dataset(),
-            {
-                "RelationshipType": "CONTAINS",
-                "ValueType": "UIDREF",
-                "ConceptNameCodeSequence": [{
-                    "CodeValue": "121232",
-                    "CodingSchemeDesignator": "DCM",
-                    "CodeMeaning": "Source series for segmentation"}],
-                "UID": ds_ref_seg.ReferencedSeriesSequence[0].SeriesInstanceUID
-            }
-        ))
+                                                                                      {
+            "RelationshipType": "CONTAINS",
+            "ValueType": "SCOORD",
+            "ConceptNameCodeSequence": [{
+                "CodeValue": "111010",
+                "CodingSchemeDesignator": "DCM",
+                "CodeMeaning": "Center"}],
+            "ContentSequence": [{
+                "ReferencedSOPSequence": [{
+                    "ReferencedSOPClassUID": ds_ref.SOPClassUID,
+                    "ReferencedSOPInstanceUID": ds_ref.SOPInstanceUID
+                }],
+                "RelationshipType": "SELECTED FROM",
+                "ValueType": "IMAGE"  # value type
+            }],
+            "GraphicData": graphic_data_center,
+            "GraphicType": "POINT",
+        }))
         ds.ContentSequence.append(update_and_insert_additional_DICOM_attributes_in_ds(Dataset(),
-            {
-                "RelationshipType": "CONTAINS",
-                "ValueType": "NUM",
-                "ConceptNameCodeSequence": [{
-                    "CodeValue": "118565006",
-                    "CodingSchemeDesignator": "SCT",
-                    "CodeMeaning": "Volume"}],
-                "MeasuredValueSequence": [{
-                    "MeasurementUnitsCodeSequence": [{
-                        "CodeValue": "mm3",
-                        "CodingSchemeDesignator": "UCUM",
-                        "CodeMeaning": "cubic millimeter"
-                    }],
-                    "NumericValue": volume_measurement
-                }]
-            }))
-        ds.ContentSequence.append(update_and_insert_additional_DICOM_attributes_in_ds(Dataset(),
-            {
-                "RelationshipType": "CONTAINS",
+                                                                                      {
+            "RelationshipType": "CONTAINS",
+            "ValueType": "NUM",
+            "ConceptNameCodeSequence": [{
+                "CodeValue": measurement_type[0],
+                "CodingSchemeDesignator": measurement_type[1],
+                "CodeMeaning": measurement_type[2]}],
+            "MeasuredValueSequence": [{
+                "MeasurementUnitsCodeSequence": [{
+                    "CodeValue": "mm",
+                    "CodingSchemeDesignator": "UCUM",
+                    "CodeMeaning": "millimeter"
+                }],
+                "NumericValue": linear_measurement
+            }],
+            "ContentSequence": [{
+                "RelationshipType": "INFERRED FROM",
                 "ValueType": "SCOORD",
-                "ConceptNameCodeSequence": [{
-                    "CodeValue": "111010",
-                    "CodingSchemeDesignator": "DCM",
-                    "CodeMeaning": "Center"}],
                 "ContentSequence": [{
                     "ReferencedSOPSequence": [{
                         "ReferencedSOPClassUID": ds_ref.SOPClassUID,
                         "ReferencedSOPInstanceUID": ds_ref.SOPInstanceUID
                     }],
                     "RelationshipType": "SELECTED FROM",
-                    "ValueType": "IMAGE" # value type
+                    "ValueType": "IMAGE"  # value type
                 }],
-                "GraphicData": graphic_data_center,
-                "GraphicType": "POINT",
-            }))
-        ds.ContentSequence.append(update_and_insert_additional_DICOM_attributes_in_ds(Dataset(),
-            {
-                "RelationshipType": "CONTAINS",
-                "ValueType": "NUM",
-                "ConceptNameCodeSequence": [{
-                    "CodeValue": measurement_type[0],
-                    "CodingSchemeDesignator": measurement_type[1],
-                    "CodeMeaning": measurement_type[2]}],
-                "MeasuredValueSequence": [{
-                    "MeasurementUnitsCodeSequence": [{
-                        "CodeValue": "mm",
-                        "CodingSchemeDesignator": "UCUM",
-                        "CodeMeaning": "millimeter"
-                    }],
-                    "NumericValue": linear_measurement
-                }],
-                "ContentSequence": [{
-                    "RelationshipType": "INFERRED FROM",
-                    "ValueType": "SCOORD",
-                    "ContentSequence": [{
-                        "ReferencedSOPSequence": [{
-                            "ReferencedSOPClassUID": ds_ref.SOPClassUID,
-                            "ReferencedSOPInstanceUID": ds_ref.SOPInstanceUID
-                        }],
-                        "RelationshipType": "SELECTED FROM",
-                        "ValueType": "IMAGE" # value type
-                    }],
-                    "GraphicData": graphic_data_linear_measurement,
-                    "GraphicType": "POLYLINE",
-                }]
-            }))
+                "GraphicData": graphic_data_linear_measurement,
+                "GraphicType": "POLYLINE",
+            }]
+        }))
         if text_values is not None:
             ds = self.add_text_values(ds, text_values)
         if qualitative_evaluations is not None:
