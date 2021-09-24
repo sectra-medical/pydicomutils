@@ -3,6 +3,7 @@ from pydicom.datadict import tag_for_keyword, dictionary_VM, dictionary_VR
 from pydicom.uid import generate_uid
 from pydicomutils.misc.definitions import MODALITY_CODE_MODALITY_DESCRIPION_DICT
 
+
 def update_and_insert_additional_DICOM_attributes_in_ds(ds, keyword_and_value_dict):
     # For every keyword
     for keyword in keyword_and_value_dict:
@@ -26,82 +27,106 @@ def update_and_insert_additional_DICOM_attributes_in_ds(ds, keyword_and_value_di
     # Return edited dataset
     return ds
 
+
 def generate_reference_sop_sequence_json(dcm_file):
     """
-    
+
     Arguments:
         dcm_file {[type]} -- [description]
     """
     ds = read_file(dcm_file)
     return {
-        "ReferencedSOPSequence": [{
-            "ReferencedSOPClassUID": ds.SOPClassUID,
-            "ReferencedSOPInstanceUID": ds.SOPInstanceUID
-        }],
+        "ReferencedSOPSequence": [
+            {
+                "ReferencedSOPClassUID": ds.SOPClassUID,
+                "ReferencedSOPInstanceUID": ds.SOPInstanceUID,
+            }
+        ],
         "RelationshipType": "CONTAINS",
         "ValueType": "IMAGE",
         "ContentSequence": [
             {
                 "RelationshipType": "HAS ACQ CONTEXT",
                 "ValueType": "CODE",
-                "ConceptNameCodeSequence": [{
-                    "CodeValue": "121139", 
-                    "CodingSchemeDesignator": "DCM", 
-                    "CodeMeaning": "Modality"}],
-                "ConceptCodeSequence": [{
-                    "CodeValue": ds.Modality, 
-                    "CodingSchemeDesignator": "DCM", 
-                    "CodeMeaning": MODALITY_CODE_MODALITY_DESCRIPION_DICT[ds.Modality]}]
+                "ConceptNameCodeSequence": [
+                    {
+                        "CodeValue": "121139",
+                        "CodingSchemeDesignator": "DCM",
+                        "CodeMeaning": "Modality",
+                    }
+                ],
+                "ConceptCodeSequence": [
+                    {
+                        "CodeValue": ds.Modality,
+                        "CodingSchemeDesignator": "DCM",
+                        "CodeMeaning": MODALITY_CODE_MODALITY_DESCRIPION_DICT[
+                            ds.Modality
+                        ],
+                    }
+                ],
             },
             {
                 "RelationshipType": "HAS ACQ CONTEXT",
                 "ValueType": "DATE",
-                "ConceptNameCodeSequence": [{
-                    "CodeValue": "111060", 
-                    "CodingSchemeDesignator": "DCM", 
-                    "CodeMeaning": "Study Date"}],
-                "Date": ds.StudyDate
+                "ConceptNameCodeSequence": [
+                    {
+                        "CodeValue": "111060",
+                        "CodingSchemeDesignator": "DCM",
+                        "CodeMeaning": "Study Date",
+                    }
+                ],
+                "Date": ds.StudyDate,
             },
             {
                 "RelationshipType": "HAS ACQ CONTEXT",
                 "ValueType": "TIME",
-                "ConceptNameCodeSequence": [{
-                    "CodeValue": "111061", 
-                    "CodingSchemeDesignator": "DCM", 
-                    "CodeMeaning": "Study Time"}],
-                "Time": ds.StudyTime
-            }
-        ]
+                "ConceptNameCodeSequence": [
+                    {
+                        "CodeValue": "111061",
+                        "CodingSchemeDesignator": "DCM",
+                        "CodeMeaning": "Study Time",
+                    }
+                ],
+                "Time": ds.StudyTime,
+            },
+        ],
     }
 
+
 def generate_DAS_sequence(dcm_files):
-    """Helper function to generate a Displayed Area Selection Sequence 
+    """Helper function to generate a Displayed Area Selection Sequence
     with required DICOM attributes from a list of DICOM objects
-    
+
     Arguments:
         dcm_files {[dcm_file1, dcm_file2, ...]} -- List of file paths
-    
+
     Returns:
         Sequence -- A diplayed area selection sequence
     """
-    sequence_data = [{
-                        "ReferencedImageSequence": [{
-                            "ReferencedSOPClassUID": ds.SOPClassUID,
-                            "ReferencedSOPInstanceUID": ds.SOPInstanceUID,
-                        }],
-                        "DisplayedAreaTopLeftHandCorner": [1, 1],
-                        "DisplayedAreaBottomRightHandCorner": [int(ds.Columns), int(ds.Rows)],
-                        "PresentationSizeMode": "SCALE TO FIT"
-                    } for ds in [read_file(dcm_file) for dcm_file in dcm_files]]
+    sequence_data = [
+        {
+            "ReferencedImageSequence": [
+                {
+                    "ReferencedSOPClassUID": ds.SOPClassUID,
+                    "ReferencedSOPInstanceUID": ds.SOPInstanceUID,
+                }
+            ],
+            "DisplayedAreaTopLeftHandCorner": [1, 1],
+            "DisplayedAreaBottomRightHandCorner": [int(ds.Columns), int(ds.Rows)],
+            "PresentationSizeMode": "SCALE TO FIT",
+        }
+        for ds in [read_file(dcm_file) for dcm_file in dcm_files]
+    ]
     return generate_sequence("DisplayedAreaSelectionSequence", sequence_data)
 
+
 def generate_RS_sequence(dcm_files):
-    """Helper function to generate a Referenced Series Sequence 
+    """Helper function to generate a Referenced Series Sequence
     with required DICOM attributes from a list of DICOM objects
-    
+
     Arguments:
         dcm_files {[dcm_file1, dcm_file2, ...]} -- List of file paths
-    
+
     Returns:
         Sequence -- A referenced series sequence
     """
@@ -110,7 +135,9 @@ def generate_RS_sequence(dcm_files):
         ds = read_file(dcm_file)
         if ds.SeriesInstanceUID not in sequence_content:
             sequence_content[ds.SeriesInstanceUID] = list()
-        sequence_content[ds.SeriesInstanceUID].append((ds.SOPClassUID, ds.SOPInstanceUID))
+        sequence_content[ds.SeriesInstanceUID].append(
+            (ds.SOPClassUID, ds.SOPInstanceUID)
+        )
     sequence_data = list()
     for series_instance_uid in sequence_content:
         series_dict = dict()
@@ -122,11 +149,11 @@ def generate_RS_sequence(dcm_files):
             instance_dict["ReferencedSOPInstanceUID"] = class_instance_uid_tuple[1]
             series_dict["ReferencedImageSequence"].append(instance_dict)
         sequence_data.append(series_dict)
-    return generate_sequence("ReferencedSeriesSequence",
-                             sequence_data)
+    return generate_sequence("ReferencedSeriesSequence", sequence_data)
+
 
 def generate_CRPES_sequence(dcm_files):
-    """Helper function to generate a Current Requested Procedure Evidence Sequence 
+    """Helper function to generate a Current Requested Procedure Evidence Sequence
     with required DICOM attributes from a list of DICOM objects
     Parameters
     ----------
@@ -141,7 +168,8 @@ def generate_CRPES_sequence(dcm_files):
         if ds.SeriesInstanceUID not in sequence_content[ds.StudyInstanceUID]:
             sequence_content[ds.StudyInstanceUID][ds.SeriesInstanceUID] = list()
         sequence_content[ds.StudyInstanceUID][ds.SeriesInstanceUID].append(
-            (ds.SOPClassUID, ds.SOPInstanceUID))
+            (ds.SOPClassUID, ds.SOPInstanceUID)
+        )
     sequence_data = list()
     for study_instance_uid in sequence_content:
         study_dict = dict()
@@ -151,7 +179,9 @@ def generate_CRPES_sequence(dcm_files):
             series_dict = dict()
             series_dict["SeriesInstanceUID"] = series_instance_uid
             series_dict["ReferencedSOPSequence"] = list()
-            for class_instance_uid_tuple in sequence_content[study_instance_uid][series_instance_uid]:
+            for class_instance_uid_tuple in sequence_content[study_instance_uid][
+                series_instance_uid
+            ]:
                 instance_dict = dict()
                 instance_dict["ReferencedSOPClassUID"] = class_instance_uid_tuple[0]
                 instance_dict["ReferencedSOPInstanceUID"] = class_instance_uid_tuple[1]
@@ -162,29 +192,32 @@ def generate_CRPES_sequence(dcm_files):
     for study_item in sequence_data:
         study_ds = Dataset()
         study_ds.StudyInstanceUID = study_instance_uid
-        study_ds.ReferencedSeriesSequence = generate_sequence("ReferencedSeriesSequence",
-            study_item["ReferencedSeriesSequence"])
+        study_ds.ReferencedSeriesSequence = generate_sequence(
+            "ReferencedSeriesSequence", study_item["ReferencedSeriesSequence"]
+        )
         sequence.append(study_ds)
     return sequence
 
-class SequenceInternal():
+
+class SequenceInternal:
     """Internal Sequence class
     Parameters
     ----------
     """
+
     sequence = None
 
     def __init__(self):
         self.sequence = Sequence()
 
     def get_sequence(self):
-        """Get the sequence
-        """
+        """Get the sequence"""
         return self.sequence
 
+
 class DummySequence(SequenceInternal):
-    """Dummy Sequence class
-    """
+    """Dummy Sequence class"""
+
     def __init__(self, sequence_data):
         """Object initialization
         Parameters
@@ -199,14 +232,15 @@ class DummySequence(SequenceInternal):
             ds = Dataset()
             # Set required DICOM attributes
             ds.Dummy = "DEFAULT"
-             # Update and insert additional DICOM attributes as available
+            # Update and insert additional DICOM attributes as available
             ds = update_and_insert_additional_DICOM_attributes_in_ds(ds, sequence_item)
             # Add dataset to sequence
             self.sequence.append(ds)
+
 
 class ConceptNameCodeSequence(SequenceInternal):
-    """Concept Name Code Sequence class
-    """
+    """Concept Name Code Sequence class"""
+
     def __init__(self, sequence_data):
         """Object initialization
         Parameters
@@ -225,10 +259,11 @@ class ConceptNameCodeSequence(SequenceInternal):
             ds = update_and_insert_additional_DICOM_attributes_in_ds(ds, sequence_item)
             # Add dataset to sequence
             self.sequence.append(ds)
+
 
 class ConceptCodeSequence(SequenceInternal):
-    """Concept Code Sequence class
-    """
+    """Concept Code Sequence class"""
+
     def __init__(self, sequence_data):
         """Object initialization
         Parameters
@@ -248,9 +283,10 @@ class ConceptCodeSequence(SequenceInternal):
             # Add dataset to sequence
             self.sequence.append(ds)
 
+
 class ContentSequence(SequenceInternal):
-    """Content Sequence class
-    """
+    """Content Sequence class"""
+
     def __init__(self, sequence_data):
         """Object initialization
         Parameters
@@ -264,15 +300,16 @@ class ContentSequence(SequenceInternal):
             # Initiate dataset
             ds = Dataset()
             # Set required DICOM attributes
-            
+
             # Update and insert additional DICOM attributes as available
             ds = update_and_insert_additional_DICOM_attributes_in_ds(ds, sequence_item)
             # Add dataset to sequence
             self.sequence.append(ds)
 
+
 class ContentTemplateSequence(SequenceInternal):
-    """Content Template Sequence class
-    """
+    """Content Template Sequence class"""
+
     def __init__(self, sequence_data):
         """Object initialization
         Parameters
@@ -293,9 +330,10 @@ class ContentTemplateSequence(SequenceInternal):
             # Add dataset to sequence
             self.sequence.append(ds)
 
+
 class CurrentRequestedProcedureEvidenceSequence(SequenceInternal):
-    """Current Requested Procedure Evidence Sequence class
-    """
+    """Current Requested Procedure Evidence Sequence class"""
+
     def __init__(self, sequence_data):
         """Object initialization
         Parameters
@@ -310,15 +348,18 @@ class CurrentRequestedProcedureEvidenceSequence(SequenceInternal):
             ds = Dataset()
             # Set required DICOM attributes
             ds.StudyInstanceUID = ""
-            ds.ReferencedSeriesSequence = generate_sequence("ReferencedSeriesSequence", dict())
+            ds.ReferencedSeriesSequence = generate_sequence(
+                "ReferencedSeriesSequence", dict()
+            )
             # Update and insert additional DICOM attributes as available
             ds = update_and_insert_additional_DICOM_attributes_in_ds(ds, sequence_item)
             # Add dataset to sequence
             self.sequence.append(ds)
 
+
 class PerformedProcedureCodeSequence(SequenceInternal):
-    """Performed Procedure Code Sequence class
-    """
+    """Performed Procedure Code Sequence class"""
+
     def __init__(self, sequence_data):
         """Object initialization
         Parameters
@@ -338,9 +379,10 @@ class PerformedProcedureCodeSequence(SequenceInternal):
             # Add dataset to sequence
             self.sequence.append(ds)
 
+
 class MeasuredValueSequence(SequenceInternal):
-    """Measured Value Sequence class
-    """
+    """Measured Value Sequence class"""
+
     def __init__(self, sequence_data):
         """Object initialization
         Parameters
@@ -355,15 +397,18 @@ class MeasuredValueSequence(SequenceInternal):
             ds = Dataset()
             # Set required DICOM attributes
             ds.NumericValue = None
-            ds.MeasurementUnitsCodeSequence = generate_sequence("MeasurementUnitsCodeSequence", dict())
+            ds.MeasurementUnitsCodeSequence = generate_sequence(
+                "MeasurementUnitsCodeSequence", dict()
+            )
             # Update and insert additional DICOM attributes as available
             ds = update_and_insert_additional_DICOM_attributes_in_ds(ds, sequence_item)
             # Add dataset to sequence
             self.sequence.append(ds)
 
+
 class MeasurementUnitsCodeSequence(SequenceInternal):
-    """Measurement Units Code Sequence class
-    """
+    """Measurement Units Code Sequence class"""
+
     def __init__(self, sequence_data):
         """Object initialization
         Parameters
@@ -383,9 +428,10 @@ class MeasurementUnitsCodeSequence(SequenceInternal):
             # Add dataset to sequence
             self.sequence.append(ds)
 
+
 class ReferencedSeriesSequence(SequenceInternal):
-    """Referenced Series Sequence class
-    """
+    """Referenced Series Sequence class"""
+
     def __init__(self, sequence_data):
         """Object initialization
         Parameters
@@ -400,19 +446,28 @@ class ReferencedSeriesSequence(SequenceInternal):
             ds = Dataset()
             # Set required DICOM attributes
             ds.SeriesInstanceUID = generate_uid()
-            ds.ReferencedSOPSequence = generate_sequence("ReferencedSOPSequence", dict())
+            ds.ReferencedSOPSequence = generate_sequence(
+                "ReferencedSOPSequence", dict()
+            )
             # Update and insert additional DICOM attributes as available
             ds = update_and_insert_additional_DICOM_attributes_in_ds(ds, sequence_item)
             # Remove mutually exclusive elemenets
-            if "ReferencedSOPSequence" in sequence_item and "ReferencedImageSequence" in ds:
+            if (
+                "ReferencedSOPSequence" in sequence_item
+                and "ReferencedImageSequence" in ds
+            ):
                 del ds.ReferencedImageSequence
-            elif "ReferencedImageSequence" in sequence_item and "ReferencedSOPSequence" in ds:
+            elif (
+                "ReferencedImageSequence" in sequence_item
+                and "ReferencedSOPSequence" in ds
+            ):
                 del ds.ReferencedSOPSequence
             self.sequence.append(ds)
 
+
 class ReferencedImageSequence(SequenceInternal):
-    """Referenced Image Sequence class
-    """
+    """Referenced Image Sequence class"""
+
     def __init__(self, sequence_data):
         """Object initialization
         Parameters
@@ -428,14 +483,15 @@ class ReferencedImageSequence(SequenceInternal):
             # Set required DICOM attributes
             ds.ReferencedSOPClassUID = "1.2.840.10008.5.1.4.1.1.1"
             ds.ReferencedSOPInstanceUID = generate_uid()
-             # Update and insert additional DICOM attributes as available
+            # Update and insert additional DICOM attributes as available
             ds = update_and_insert_additional_DICOM_attributes_in_ds(ds, sequence_item)
             # Add dataset to sequence
             self.sequence.append(ds)
+
 
 class ReferencedSOPSequence(SequenceInternal):
-    """Referenced Image Sequence class
-    """
+    """Referenced Image Sequence class"""
+
     def __init__(self, sequence_data):
         """Object initialization
         Parameters
@@ -451,14 +507,15 @@ class ReferencedSOPSequence(SequenceInternal):
             # Set required DICOM attributes
             ds.ReferencedSOPClassUID = "1.2.840.10008.5.1.4.1.1.1"
             ds.ReferencedSOPInstanceUID = generate_uid()
-             # Update and insert additional DICOM attributes as available
+            # Update and insert additional DICOM attributes as available
             ds = update_and_insert_additional_DICOM_attributes_in_ds(ds, sequence_item)
             # Add dataset to sequence
             self.sequence.append(ds)
 
+
 class DisplayedAreaSelectionSequence(SequenceInternal):
-    """Displayed Area Selection Sequence class
-    """
+    """Displayed Area Selection Sequence class"""
+
     def __init__(self, sequence_data):
         """Object initialization
         Parameters
@@ -476,14 +533,15 @@ class DisplayedAreaSelectionSequence(SequenceInternal):
             ds.DisplayedAreaBottomRightHandCorner = [100, 100]
             ds.PresentationSizeMode = "SCALE TO FIT"
             ds.PresentationPixelSpacing = ["1.0", "1.0"]
-             # Update and insert additional DICOM attributes as available
+            # Update and insert additional DICOM attributes as available
             ds = update_and_insert_additional_DICOM_attributes_in_ds(ds, sequence_item)
             # Add dataset to sequence
             self.sequence.append(ds)
 
+
 class GraphicAnnotationSequence(SequenceInternal):
-    """Graphic Annotation Sequence class
-    """
+    """Graphic Annotation Sequence class"""
+
     def __init__(self, sequence_data):
         """Object initialization
         Parameters
@@ -498,14 +556,15 @@ class GraphicAnnotationSequence(SequenceInternal):
             ds = Dataset()
             # Set required DICOM attributes
             ds.GraphicLayer = "DEFAULT"
-             # Update and insert additional DICOM attributes as available
+            # Update and insert additional DICOM attributes as available
             ds = update_and_insert_additional_DICOM_attributes_in_ds(ds, sequence_item)
             # Add dataset to sequence
             self.sequence.append(ds)
-            
+
+
 class TextObjectSequence(SequenceInternal):
-    """Text Object Sequence class
-    """
+    """Text Object Sequence class"""
+
     def __init__(self, sequence_data):
         """Object initialization
         Parameters
@@ -531,16 +590,19 @@ class TextObjectSequence(SequenceInternal):
                 del ds.BoundingBoxBottomRightHandCorner
                 del ds.BoundingBoxAnnotationUnits
                 del ds.BoundingBoxTextHorizontalJustification
-            elif "BoundingBoxTopLeftHandCorner" in sequence_item and "AnchorPoint" in ds:
+            elif (
+                "BoundingBoxTopLeftHandCorner" in sequence_item and "AnchorPoint" in ds
+            ):
                 del ds.AnchorPoint
                 del ds.AnchorPointAnnotationUnits
                 del ds.AnchorPointVisibility
             # Add dataset to sequence
             self.sequence.append(ds)
 
+
 class TextStyleSequence(SequenceInternal):
-    """Text Style Sequence class
-    """
+    """Text Style Sequence class"""
+
     def __init__(self, sequence_data):
         """Object initialization
         Parameters
@@ -555,11 +617,11 @@ class TextStyleSequence(SequenceInternal):
             ds = Dataset()
             # Set required DICOM attributes
             ds.CSSFontName = "Time New Roman"
-            ds.TextColorCIELabValue = [65535, 32896, 32896] # white
+            ds.TextColorCIELabValue = [65535, 32896, 32896]  # white
             ds.ShadowStyle = "NORMAL"
             ds.ShadowOffsetX = 1.0
             ds.ShadowOffsetY = 1.0
-            ds.ShadowColorCIELabValue = [0, 32896, 32896] # black
+            ds.ShadowColorCIELabValue = [0, 32896, 32896]  # black
             ds.ShadowOpacity = 1.0
             ds.Underlined = "N"
             ds.Bold = "N"
@@ -569,9 +631,10 @@ class TextStyleSequence(SequenceInternal):
             # Add dataset to sequence
             self.sequence.append(ds)
 
+
 class GraphicObjectSequence(SequenceInternal):
-    """Graphic Object Sequence class
-    """
+    """Graphic Object Sequence class"""
+
     def __init__(self, sequence_data):
         """Object initialization
         Parameters
@@ -595,9 +658,10 @@ class GraphicObjectSequence(SequenceInternal):
             # Add dataset to sequence
             self.sequence.append(ds)
 
+
 class LineStyleSequence(SequenceInternal):
-    """Line Style Sequence class
-    """
+    """Line Style Sequence class"""
+
     def __init__(self, sequence_data):
         """Object initialization
         Parameters
@@ -611,23 +675,24 @@ class LineStyleSequence(SequenceInternal):
             # Initiate dataset
             ds = Dataset()
             # Set required DICOM attributes
-            ds.PatternOnColorCIELabValue = [65535, 32896, 32896] # white
+            ds.PatternOnColorCIELabValue = [65535, 32896, 32896]  # white
             ds.PatternOnOpacity = 1.0
             ds.LineThickness = 1.0
             ds.LineDashingStyle = "SOLID"
             ds.ShadowStyle = "NORMAL"
             ds.ShadowOffsetX = 1.0
             ds.ShadowOffsetY = 1.0
-            ds.ShadowColorCIELabValue = [0, 32896, 32896] # black
+            ds.ShadowColorCIELabValue = [0, 32896, 32896]  # black
             ds.ShadowOpacity = 1.0
             # Update and insert additional DICOM attributes as available
             ds = update_and_insert_additional_DICOM_attributes_in_ds(ds, sequence_item)
             # Add dataset to sequence
             self.sequence.append(ds)
 
+
 class FillStyleSequence(SequenceInternal):
-    """Fill Style Sequence class
-    """
+    """Fill Style Sequence class"""
+
     def __init__(self, sequence_data):
         """Object initialization
         Parameters
@@ -641,17 +706,18 @@ class FillStyleSequence(SequenceInternal):
             # Initiate dataset
             ds = Dataset()
             # Set required DICOM attributes
-            ds.PatternOnColorCIELabValue = [65535, 32896, 32896] # white
+            ds.PatternOnColorCIELabValue = [65535, 32896, 32896]  # white
             ds.PatternOnOpacity = 1.0
             ds.FillMode = "SOLID"
-             # Update and insert additional DICOM attributes as available
+            # Update and insert additional DICOM attributes as available
             ds = update_and_insert_additional_DICOM_attributes_in_ds(ds, sequence_item)
             # Add dataset to sequence
             self.sequence.append(ds)
 
+
 class GraphicLayerSequence(SequenceInternal):
-    """Graphic Layer Sequence class
-    """
+    """Graphic Layer Sequence class"""
+
     def __init__(self, sequence_data):
         """Object initialization
         Parameters
@@ -666,15 +732,16 @@ class GraphicLayerSequence(SequenceInternal):
             ds = Dataset()
             # Set required DICOM attributes
             ds.GraphicLayer = "DEFAULT"
-            ds.GraphicOrder = "1"
+            ds.GraphicLayerOrder = "1"
             # Update and insert additional DICOM attributes as available
             ds = update_and_insert_additional_DICOM_attributes_in_ds(ds, sequence_item)
             # Add dataset to sequence
             self.sequence.append(ds)
 
+
 class SoftcopyVOILUTSequence(SequenceInternal):
-    """Softcopy VOI LUT Sequence class
-    """
+    """Softcopy VOI LUT Sequence class"""
+
     def __init__(self, sequence_data):
         """Object initialization
         Parameters
@@ -695,9 +762,10 @@ class SoftcopyVOILUTSequence(SequenceInternal):
             # Add dataset to sequence
             self.sequence.append(ds)
 
+
 class GeneralSequence(SequenceInternal):
-    """General Sequence class
-    """
+    """General Sequence class"""
+
     def __init__(self, sequence_data):
         """Object initialization
         Parameters
@@ -711,11 +779,12 @@ class GeneralSequence(SequenceInternal):
             # Initiate dataset
             ds = Dataset()
             # Set required DICOM attributes
-            
+
             # Update and insert additional DICOM attributes as available
             ds = update_and_insert_additional_DICOM_attributes_in_ds(ds, sequence_item)
             # Add dataset to sequence
             self.sequence.append(ds)
+
 
 def generate_sequence(sequence_name, sequence_data):
     """Helper function to generate appropriate sequences
