@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pydicomutils"
-version = "0.1.0"
+version = "0.1.1"
 description = "Python library for creating DICOM objects"
 readme = "README.md"
 authors = [{ name = "Daniel Forsberg", email = "daniel.forsberg@sectra.com" }]
@@ -28,7 +28,7 @@ requires-python = ">=3.7"
 
 
 [tool.bumpver]
-current_version = "0.1.0"
+current_version = "0.1.1"
 version_pattern = "MAJOR.MINOR.PATCH"
 commit_message  = "bump version {old_version} -> {new_version}"
 commit          = true
