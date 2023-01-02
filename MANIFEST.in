@@ -1,0 +1,3 @@
+# MANIFEST.in
+
+include src/pydicomutils/external/icc_profiles/sRGB2014.icc
