@@ -4,10 +4,12 @@ import glob
 import logging
 
 from pydicom import read_file
-from utils.misc.color import WHITE, PURPLE, ORANGE, BLUE
-from utils.misc.dcm_io_helper import read_and_sort_dicom_files
+
 from pydicomutils.IODs.GSPS import GSPS
 from pydicomutils.IODs.KOS import KOS
+
+from utils.misc.color import WHITE, PURPLE, ORANGE, BLUE
+from utils.misc.dcm_io_helper import read_and_sort_dicom_files
 
 # Create logger
 logger = logging.getLogger(__name__)

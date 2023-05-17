@@ -1,8 +1,9 @@
 import os
 import glob
-import pandas
-from datetime import datetime
 import logging
+from datetime import datetime
+
+import pandas
 
 from pydicomutils.IODs.EnhancedSRTID1500 import EnhancedSRTID1500
 
@@ -17,14 +18,19 @@ stream_handler = logging.StreamHandler()
 stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
 
+
 def run():
     logger.info("Starting")
     file_folder = os.path.dirname(os.path.realpath(__file__))
     output_folder = os.path.join(file_folder, "output")
     os.makedirs(output_folder, exist_ok=True)
 
-    df_data_entries = pandas.read_csv(os.path.join(file_folder, "data", "cr_images", "Data_Entry_2017.csv"))
-    df_bbox_entries = pandas.read_csv(os.path.join(file_folder, "data", "cr_images", "BBox_List_2017.csv"))
+    df_data_entries = pandas.read_csv(
+        os.path.join(file_folder, "data", "cr_images", "Data_Entry_2017.csv")
+    )
+    df_bbox_entries = pandas.read_csv(
+        os.path.join(file_folder, "data", "cr_images", "BBox_List_2017.csv")
+    )
     df_data_entries.set_index("ImageIndex")
     df_data_entries.sort_values(by="ImageIndex")
     patient_ids = df_data_entries["PatientID"].unique()
@@ -37,8 +43,12 @@ def run():
             logger.info("Study: " + str(study_id))
             study_df = patient_df[patient_df["FollowUp"] == study_id]
             study_id = str(patient_id).zfill(6) + str(study_id).zfill(4)
-            study_folder = os.path.join(output_folder, "data", "cr_images", "output", study_id)
-            referenced_dcm_files = glob.glob(os.path.join(study_folder,"series_001","*.dcm"))
+            study_folder = os.path.join(
+                output_folder, "data", "cr_images", "output", study_id
+            )
+            referenced_dcm_files = glob.glob(
+                os.path.join(study_folder, "series_001", "*.dcm")
+            )
 
             # Create Enhanced SR TID 1500 adding a guessed clavicle location
             logger.info("Enhanced SR TID 1500")
@@ -47,18 +57,33 @@ def run():
             enhanced_sr.initiate(referenced_dcm_files)
             enhanced_sr.set_dicom_attribute("SeriesNumber", "350")
             enhanced_sr.set_dicom_attribute("SeriesDescription", "Landmarks")
-            enhanced_sr.set_dicom_attribute("SeriesDate", datetime.now().strftime("%Y%m%d"))
-            enhanced_sr.set_dicom_attribute("SeriesTime", datetime.now().strftime("%H%M%S"))
-            enhanced_sr.add_landmark(referenced_dcm_files[0], 
-                [240, 200], ["51299004", "SCT", "Clavicle"], ["51185008", "SCT", "Chest"])
+            enhanced_sr.set_dicom_attribute(
+                "SeriesDate", datetime.now().strftime("%Y%m%d")
+            )
+            enhanced_sr.set_dicom_attribute(
+                "SeriesTime", datetime.now().strftime("%H%M%S")
+            )
+            enhanced_sr.add_landmark(
+                referenced_dcm_files[0],
+                [240, 200],
+                ["51299004", "SCT", "Clavicle"],
+                ["51185008", "SCT", "Chest"],
+            )
 
-            os.makedirs(os.path.join(study_folder,
-                                    "series_" + str(enhanced_sr.dataset.SeriesNumber).zfill(3)), 
-                                    exist_ok=True)
-            output_file = os.path.join(study_folder,
-                                    "series_" + str(enhanced_sr.dataset.SeriesNumber).zfill(3), 
-                                    "sr.dcm")
+            os.makedirs(
+                os.path.join(
+                    study_folder,
+                    "series_" + str(enhanced_sr.dataset.SeriesNumber).zfill(3),
+                ),
+                exist_ok=True,
+            )
+            output_file = os.path.join(
+                study_folder,
+                "series_" + str(enhanced_sr.dataset.SeriesNumber).zfill(3),
+                "sr.dcm",
+            )
             enhanced_sr.write_to_file(output_file)
+
 
 if __name__ == "__main__":
     run()

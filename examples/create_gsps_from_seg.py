@@ -4,7 +4,7 @@ import glob
 import logging
 
 from pydicom import read_file
-from utils.misc.dcm_io_helper import read_and_sort_dicom_files
+
 from utils.scripts.convert_seg_to_gsps import convert_seg_to_gsps
 
 # Create logger

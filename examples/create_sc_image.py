@@ -1,15 +1,7 @@
 import os
-import random
-from datetime import datetime
-from math import pow
-import numpy as np
-from skimage.transform import resize
-from skimage import data
-from imageio import imread
-import requests
 import logging
 
-from pydicom.uid import generate_uid
+from skimage import data
 
 from pydicomutils.IODs.SCImage import SCImage
 
@@ -24,8 +16,9 @@ stream_handler = logging.StreamHandler()
 stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
 
+
 def run():
-    logger.info("Starting") 
+    logger.info("Starting")
     file_folder = os.path.dirname(os.path.realpath(__file__))
     output_folder = os.path.join(file_folder, "output")
     os.makedirs(output_folder, exist_ok=True)
@@ -41,9 +34,11 @@ def run():
     study_folder = os.path.join(output_folder, "data", "sc_images")
     os.makedirs(study_folder, exist_ok=True)
     os.makedirs(os.path.join(study_folder, "brick_512x512"), exist_ok=True)
-    output_file = os.path.join(study_folder,
-                                 "brick_512x512", 
-                                str(sc_image.dataset.InstanceNumber).zfill(6) + ".dcm")
+    output_file = os.path.join(
+        study_folder,
+        "brick_512x512",
+        str(sc_image.dataset.InstanceNumber).zfill(6) + ".dcm",
+    )
     sc_image.write_to_file(output_file)
 
     # Simple example with an RGB test image from skimage
@@ -57,10 +52,13 @@ def run():
     study_folder = os.path.join(output_folder, "data", "sc_images")
     os.makedirs(study_folder, exist_ok=True)
     os.makedirs(os.path.join(study_folder, "retina_no_tiling"), exist_ok=True)
-    output_file = os.path.join(study_folder,
-                                 "retina_no_tiling", 
-                                str(sc_image.dataset.InstanceNumber).zfill(6) + ".dcm")
+    output_file = os.path.join(
+        study_folder,
+        "retina_no_tiling",
+        str(sc_image.dataset.InstanceNumber).zfill(6) + ".dcm",
+    )
     sc_image.write_to_file(output_file)
+
 
 if __name__ == "__main__":
     run()

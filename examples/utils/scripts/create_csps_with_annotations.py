@@ -1,11 +1,14 @@
 import os
 import random
-import pydicom
 import datetime
+
+import pydicom
+
 from pydicomutils.IODs.CSPS import CSPS
 
+
 def verify_presentation_state_content(presentation_state):
-    """Helper function to verify that the content in presentation_state is appropriate 
+    """Helper function to verify that the content in presentation_state is appropriate
     to create a basic text SR object
     ----------
     Parameters
@@ -25,13 +28,18 @@ def verify_presentation_state_content(presentation_state):
     if "ContentCreatorName" not in presentation_state:
         presentation_state["ContentCreatorName"] = ""
     if "PresentationCreationDate" not in presentation_state:
-        presentation_state["PresentationCreationDate"] = datetime.datetime.now().strftime("%Y%m%d")
+        presentation_state[
+            "PresentationCreationDate"
+        ] = datetime.datetime.now().strftime("%Y%m%d")
     if "PresentationCreationTime" not in presentation_state:
-        presentation_state["PresentationCreationTime"] = datetime.datetime.now().strftime("%H%M%S")
+        presentation_state[
+            "PresentationCreationTime"
+        ] = datetime.datetime.now().strftime("%H%M%S")
     return presentation_state
 
+
 def verify_series_content(series):
-    """Helper function to verify that the content in series is appropriate 
+    """Helper function to verify that the content in series is appropriate
     to create a basic text SR object
     Parameters
     ----------
@@ -50,8 +58,9 @@ def verify_series_content(series):
 
     return series
 
+
 def verify_study_content(study):
-    """Helper function to verify that the content in study is appropriate 
+    """Helper function to verify that the content in study is appropriate
     to create a basic text SR object
     Parameters
     ----------
@@ -60,18 +69,24 @@ def verify_study_content(study):
         print("study is expected to be a dict")
         return
     if "PatientID" not in study:
-        study["PatientID"] = ''.join(random.choice('0123456789ABCDEF') for i in range(16))
+        study["PatientID"] = "".join(
+            random.choice("0123456789ABCDEF") for i in range(16)
+        )
     if "StudyInstanceUID" not in study:
         study["StudyInstanceUID"] = pydicom.uid.generate_uid()
     if "StudyID" not in study or "AccessionNumber" not in study:
-        study["StudyID"] = ''.join(random.choice('0123456789ABCDEF') for i in range(16))
+        study["StudyID"] = "".join(random.choice("0123456789ABCDEF") for i in range(16))
         study["AccessionNumber"] = study["StudyID"]
     if "Manufacturer" not in study:
         study["Manufacturer"] = "UNKNOWN"
     study["series_content"] = verify_series_content(study["series_content"])
-    study["presentation_state_content"] = verify_presentation_state_content(study["presentation_state_content"])
+    study["presentation_state_content"] = verify_presentation_state_content(
+        study["presentation_state_content"]
+    )
 
     return study
+
+
 def create_csps_with_annotations(study, output_folder):
     """Helper function to create a CSPS object for a single series
     of DICOM objects
@@ -94,7 +109,7 @@ def create_csps_with_annotations(study, output_folder):
                      "ReferencedImageSequence" : [{
                          "ReferencedSOPClassUID" : ???,
                          "ReferencedSOPInstanceUID" : ???
-                     }]      
+                     }]
                  }],
                  "GraphicAnnotationSequence" : [{
                      "ReferencedImageSequence" : ???,
@@ -126,25 +141,35 @@ def create_csps_with_annotations(study, output_folder):
 
     csps = CSPS()
     csps.create_empty_iod()
-    
+
     for dicom_attribute in study.keys():
-        if dicom_attribute == "series_content" or dicom_attribute == "presentation_state_content":
+        if (
+            dicom_attribute == "series_content"
+            or dicom_attribute == "presentation_state_content"
+        ):
             continue
         csps.set_dicom_attribute(dicom_attribute, study[dicom_attribute])
-    
-    for dicom_attribute in study["series_content"].keys():
-        csps.set_dicom_attribute(dicom_attribute, 
-                                          study["series_content"][dicom_attribute])
-    
-    for dicom_attribute in study["presentation_state_content"].keys():
-        csps.set_dicom_attribute(dicom_attribute, 
-                                          study["presentation_state_content"][dicom_attribute])
 
-    os.makedirs(os.path.join(output_folder,
-                             "series_" + study["series_content"]["SeriesNumber"].zfill(3)), 
-                             exist_ok=True)
-    output_file = os.path.join(output_folder,
-                               "series_" + study["series_content"]["SeriesNumber"].zfill(3), 
-                               "pr.dcm")
+    for dicom_attribute in study["series_content"].keys():
+        csps.set_dicom_attribute(
+            dicom_attribute, study["series_content"][dicom_attribute]
+        )
+
+    for dicom_attribute in study["presentation_state_content"].keys():
+        csps.set_dicom_attribute(
+            dicom_attribute, study["presentation_state_content"][dicom_attribute]
+        )
+
+    os.makedirs(
+        os.path.join(
+            output_folder, "series_" + study["series_content"]["SeriesNumber"].zfill(3)
+        ),
+        exist_ok=True,
+    )
+    output_file = os.path.join(
+        output_folder,
+        "series_" + study["series_content"]["SeriesNumber"].zfill(3),
+        "pr.dcm",
+    )
 
     csps.write_to_file(output_file, write_like_original=False)

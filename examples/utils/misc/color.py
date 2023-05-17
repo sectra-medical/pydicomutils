@@ -1,29 +1,34 @@
 from enum import Enum
 from collections import namedtuple
+
 from colormath.color_objects import LabColor, XYZColor, sRGBColor
 from colormath.color_conversions import convert_color
 
-Color = namedtuple('RGB','red, green, blue')
+Color = namedtuple("RGB", "red, green, blue")
+
 
 class RGB(Color):
     def hex_format(self):
-        '''Returns color in hex format'''
-        return '#{:02X}{:02X}{:02X}'.format(self.red, self.green, self.blue)
+        """Returns color in hex format"""
+        return "#{:02X}{:02X}{:02X}".format(self.red, self.green, self.blue)
 
     def cielab_format(self):
         rgb = sRGBColor(self.red / 255.0, self.green / 255.0, self.blue / 255.0)
-        xyz = convert_color(rgb, XYZColor, target_illuminant='d50')
+        xyz = convert_color(rgb, XYZColor, target_illuminant="d50")
         lab = convert_color(xyz, LabColor)
         return list(lab.get_value_tuple())
 
     def dcm_format(self):
         rgb = sRGBColor(self.red / 255.0, self.green / 255.0, self.blue / 255.0)
-        xyz = convert_color(rgb, XYZColor, target_illuminant='d50')
+        xyz = convert_color(rgb, XYZColor, target_illuminant="d50")
         lab = convert_color(xyz, LabColor)
         lab = lab.get_value_tuple()
-        return [int((lab[0] / 100.0) * 65535),
-                int(((lab[1] + 128.0) / 255.0) * 65535),
-                int(((lab[2] + 128.0) / 255.0) * 65535)]
+        return [
+            int((lab[0] / 100.0) * 65535),
+            int(((lab[1] + 128.0) / 255.0) * 65535),
+            int(((lab[2] + 128.0) / 255.0) * 65535),
+        ]
+
 
 # Color Contants
 ALICEBLUE = RGB(240, 248, 255)

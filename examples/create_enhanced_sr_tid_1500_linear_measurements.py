@@ -1,9 +1,8 @@
 import os
 import glob
+import logging
 from shutil import copy
 from datetime import datetime
-import numpy as np
-import logging
 
 from pydicom import read_file
 
@@ -20,6 +19,7 @@ stream_handler = logging.StreamHandler()
 stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
 
+
 def run():
     logger.info("Starting")
     file_folder = os.path.dirname(os.path.realpath(__file__))
@@ -27,11 +27,15 @@ def run():
     os.makedirs(output_folder, exist_ok=True)
 
     # Find original images
-    input_folder = os.path.join(file_folder, "data", "ct_images", "original_dicom_images")
-    referenced_dcm_files = glob.glob(os.path.join(input_folder,"*.dcm"))
+    input_folder = os.path.join(
+        file_folder, "data", "ct_images", "original_dicom_images"
+    )
+    referenced_dcm_files = glob.glob(os.path.join(input_folder, "*.dcm"))
 
     # Set output folder
-    output_folder = os.path.join(output_folder, "data", "ct_images", "linear_measurements")
+    output_folder = os.path.join(
+        output_folder, "data", "ct_images", "linear_measurements"
+    )
 
     # Copy original images to output folder
     ds = read_file(referenced_dcm_files[0])
@@ -56,25 +60,47 @@ def run():
     enhanced_sr.set_dicom_attribute("SeriesDescription", "Imaging Measurement Report")
     enhanced_sr.set_dicom_attribute("SeriesDate", datetime.now().strftime("%Y%m%d"))
     enhanced_sr.set_dicom_attribute("SeriesTime", datetime.now().strftime("%H%M%S"))
-    enhanced_sr.add_linear_measurement_double_axis(sop_instance_uid_to_dcm_file["1.3.6.1.4.1.14519.5.2.1.6279.6001.824843590991776411530080688091"],
-        32.2, [299, 343, 326, 380], ["103339001", "SCT", "Long Axis"],
-        23.1, [302, 380, 328, 361], ["103340004", "SCT", "Short Axis"],
+    enhanced_sr.add_linear_measurement_double_axis(
+        sop_instance_uid_to_dcm_file[
+            "1.3.6.1.4.1.14519.5.2.1.6279.6001.824843590991776411530080688091"
+        ],
+        32.2,
+        [299, 343, 326, 380],
+        ["103339001", "SCT", "Long Axis"],
+        23.1,
+        [302, 380, 328, 361],
+        ["103340004", "SCT", "Short Axis"],
         ["5298800", "SCT", "Lesion"],
         ["39607008", "SCT", "Lung"],
-        coded_values=[{"ConceptNameCode": ["31094006","SCT", "Lobe of lung"],
-                    "ConceptCode": ["41224006", "SCT", "Lower lobe of left lung"]},
-                    {"ConceptNameCode": ["RID6037","RADLEX", "Attenuation Characteristic"],
-                    "ConceptCode": ["RID5741", "RADLEX", "Solid"]},
-                    {"ConceptNameCode": ["129737002","SCT", "Radiographic lesion margin"],
-                    "ConceptCode": ["129742005", "SCT", "Lesion with spiculated margin"]}])
+        coded_values=[
+            {
+                "ConceptNameCode": ["31094006", "SCT", "Lobe of lung"],
+                "ConceptCode": ["41224006", "SCT", "Lower lobe of left lung"],
+            },
+            {
+                "ConceptNameCode": ["RID6037", "RADLEX", "Attenuation Characteristic"],
+                "ConceptCode": ["RID5741", "RADLEX", "Solid"],
+            },
+            {
+                "ConceptNameCode": ["129737002", "SCT", "Radiographic lesion margin"],
+                "ConceptCode": ["129742005", "SCT", "Lesion with spiculated margin"],
+            },
+        ],
+    )
 
-    os.makedirs(os.path.join(output_folder,
-                            "series_" + str(enhanced_sr.dataset.SeriesNumber).zfill(3)), 
-                            exist_ok=True)
-    output_file = os.path.join(output_folder,
-                            "series_" + str(enhanced_sr.dataset.SeriesNumber).zfill(3), 
-                            "sr.dcm")
+    os.makedirs(
+        os.path.join(
+            output_folder, "series_" + str(enhanced_sr.dataset.SeriesNumber).zfill(3)
+        ),
+        exist_ok=True,
+    )
+    output_file = os.path.join(
+        output_folder,
+        "series_" + str(enhanced_sr.dataset.SeriesNumber).zfill(3),
+        "sr.dcm",
+    )
     enhanced_sr.write_to_file(output_file)
+
 
 if __name__ == "__main__":
     run()
