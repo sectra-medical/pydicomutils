@@ -95,13 +95,17 @@ def update_and_insert_additional_DICOM_attributes_in_ds(ds, keyword_and_value_di
     return ds
 
 
-def generate_reference_sop_sequence_json(dcm_file):
+def generate_reference_sop_sequence_json(dcm):
     """
 
     Arguments:
         dcm_file {[type]} -- [description]
     """
-    ds = read_file(dcm_file)
+    ds = None
+    if isinstance(dcm, Dataset):
+        ds = dcm
+    else:
+        ds = read_file(dcm)
     return {
         "ReferencedSOPSequence": [
             {
@@ -160,12 +164,12 @@ def generate_reference_sop_sequence_json(dcm_file):
     }
 
 
-def generate_DAS_sequence(dcm_files):
+def generate_DAS_sequence(dcms):
     """Helper function to generate a Displayed Area Selection Sequence
     with required DICOM attributes from a list of DICOM objects
 
     Arguments:
-        dcm_files {[dcm_file1, dcm_file2, ...]} -- List of file paths
+        dcms {[dcm_file1, dcm_file2, ...]} -- List of file paths
 
     Returns:
         Sequence -- A diplayed area selection sequence
@@ -182,23 +186,23 @@ def generate_DAS_sequence(dcm_files):
             "DisplayedAreaBottomRightHandCorner": [int(ds.Columns), int(ds.Rows)],
             "PresentationSizeMode": "SCALE TO FIT",
         }
-        for ds in [read_file(dcm_file) for dcm_file in dcm_files]
+        for ds in [read_file(dcm_file) for dcm_file in dcms]
     ]
     return generate_sequence("DisplayedAreaSelectionSequence", sequence_data)
 
 
-def generate_RS_sequence(dcm_files):
+def generate_RS_sequence(dcms):
     """Helper function to generate a Referenced Series Sequence
     with required DICOM attributes from a list of DICOM objects
 
     Arguments:
-        dcm_files {[dcm_file1, dcm_file2, ...]} -- List of file paths
+        dcms {[dcm_file1, dcm_file2, ...]} -- List of file paths
 
     Returns:
         Sequence -- A referenced series sequence
     """
     sequence_content = dict()
-    for dcm_file in dcm_files:
+    for dcm_file in dcms:
         ds = read_file(dcm_file)
         if ds.SeriesInstanceUID not in sequence_content:
             sequence_content[ds.SeriesInstanceUID] = list()
@@ -219,17 +223,21 @@ def generate_RS_sequence(dcm_files):
     return generate_sequence("ReferencedSeriesSequence", sequence_data)
 
 
-def generate_CRPES_sequence(dcm_files):
+def generate_CRPES_sequence(dcms):
     """Helper function to generate a Current Requested Procedure Evidence Sequence
     with required DICOM attributes from a list of DICOM objects
     Parameters
     ----------
-    dcm_files : List of DICOM objects that are to be referenced in the
+    dcms : List of DICOM objects that are to be referenced in the
                 Current Requested Procedure Evidence Sequence
     """
     sequence_content = dict()
-    for dcm_file in dcm_files:
-        ds = read_file(dcm_file)
+    for dcm in dcms:
+        ds = None
+        if isinstance(dcm, Dataset):
+            ds = dcm
+        else:
+            ds = read_file(dcm)
         if ds.StudyInstanceUID not in sequence_content:
             sequence_content[ds.StudyInstanceUID] = dict()
         if ds.SeriesInstanceUID not in sequence_content[ds.StudyInstanceUID]:
