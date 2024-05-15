@@ -1,3 +1,5 @@
+import json
+
 from pydicom import Sequence, Dataset, read_file, DataElement
 from pydicom.datadict import tag_for_keyword, dictionary_VM, dictionary_VR
 from pydicom.uid import generate_uid
@@ -69,6 +71,94 @@ MODALITY_CODE_MODALITY_DESCRIPION_DICT = {
     "XA": "X-Ray Angiography",
     "XC": "External-camera Photography",
 }
+
+
+class ConceptNameCodeSequenceItem(object):
+    def __init__(
+        self, code_value: str, coding_scheme_designator: str, code_meaning: str
+    ):
+        self.CodeValue = code_value
+        self.CodingSchemeDesignator = coding_scheme_designator
+        self.CodeMeaning = code_meaning
+
+    def CodeValue(self):
+        return self.CodeValue
+
+    def CodingSchemeDesignator(self):
+        return self.CodingSchemeDesignator
+
+    def CodeMeaning(self):
+        return self.CodeMeaning
+
+    def __str__(self):
+        return f"CodeValue: {self.CodeValue}, CodingSchemeDesignator: {self.CodingSchemeDesignator}, CodeMeaning: {self.CodeMeaning}"
+
+    def __repr__(self):
+        return f"CodeValue: {self.CodeValue}, CodingSchemeDesignator: {self.CodingSchemeDesignator}, CodeMeaning: {self.CodeMeaning}"
+
+    def __eq__(self, other):
+        return (
+            self.CodeValue == other.CodeValue
+            and self.CodingSchemeDesignator == other.CodingSchemeDesignator
+            and self.CodeMeaning == other.CodeMeaning
+        )
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def as_dict(self):
+        return {
+            "CodeValue": self.CodeValue,
+            "CodingSchemeDesignator": self.CodingSchemeDesignator,
+            "CodeMeaning": self.CodeMeaning,
+        }
+
+    def as_json(self):
+        return json.dumps(self.as_dict())
+
+
+class ConceptCodeSequenceItem(object):
+    def __init__(
+        self, code_value: str, coding_scheme_designator: str, code_meaning: str
+    ):
+        self.CodeValue = code_value
+        self.CodingSchemeDesignator = coding_scheme_designator
+        self.CodeMeaning = code_meaning
+
+    def CodeValue(self):
+        return self.CodeValue
+
+    def CodingSchemeDesignator(self):
+        return self.CodingSchemeDesignator
+
+    def CodeMeaning(self):
+        return self.CodeMeaning
+
+    def __str__(self):
+        return f"CodeValue: {self.CodeValue}, CodingSchemeDesignator: {self.CodingSchemeDesignator}, CodeMeaning: {self.CodeMeaning}"
+
+    def __repr__(self):
+        return f"CodeValue: {self.CodeValue}, CodingSchemeDesignator: {self.CodingSchemeDesignator}, CodeMeaning: {self.CodeMeaning}"
+
+    def __eq__(self, other):
+        return (
+            self.CodeValue == other.CodeValue
+            and self.CodingSchemeDesignator == other.CodingSchemeDesignator
+            and self.CodeMeaning == other.CodeMeaning
+        )
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def as_dict(self):
+        return {
+            "CodeValue": self.CodeValue,
+            "CodingSchemeDesignator": self.CodingSchemeDesignator,
+            "CodeMeaning": self.CodeMeaning,
+        }
+
+    def as_json(self):
+        return json.dumps(self.as_dict())
 
 
 def update_and_insert_additional_DICOM_attributes_in_ds(ds, keyword_and_value_dict):
