@@ -4,48 +4,46 @@
 #
 #    pip-compile --extra=dev pyproject.toml
 #
-attrs==22.2.0
-    # via pytest
-black==22.12.0
+black==24.4.2
     # via pydicomutils (pyproject.toml)
-bumpver==2022.1120
+bumpver==2023.1129
     # via pydicomutils (pyproject.toml)
-click==8.1.3
+click==8.1.7
     # via
     #   black
     #   bumpver
 colorama==0.4.6
     # via bumpver
-exceptiongroup==1.1.0
+exceptiongroup==1.2.1
     # via pytest
-iniconfig==1.1.1
+iniconfig==2.0.0
     # via pytest
-isort==5.11.4
+isort==5.13.2
     # via pydicomutils (pyproject.toml)
 lexid==2021.1006
     # via bumpver
-mypy==0.991
+looseversion==1.3.0
+    # via bumpver
+mypy==1.10.0
     # via pydicomutils (pyproject.toml)
-mypy-extensions==0.4.3
+mypy-extensions==1.0.0
     # via
     #   black
     #   mypy
-packaging==22.0
-    # via pytest
-pathlib2==2.3.7.post1
-    # via bumpver
-pathspec==0.10.3
+packaging==24.0
+    # via
+    #   black
+    #   pytest
+pathspec==0.12.1
     # via black
-platformdirs==2.6.2
+platformdirs==4.2.2
     # via black
-pluggy==1.0.0
+pluggy==1.5.0
     # via pytest
-pydicom==2.3.1
+pydicom==2.4.4
     # via pydicomutils (pyproject.toml)
-pytest==7.2.0
+pytest==8.2.0
     # via pydicomutils (pyproject.toml)
-six==1.16.0
-    # via pathlib2
 toml==0.10.2
     # via bumpver
 tomli==2.0.1
@@ -53,8 +51,7 @@ tomli==2.0.1
     #   black
     #   mypy
     #   pytest
-typing-extensions==4.4.0
-    # via mypy
-
-# The following packages are considered to be unsafe in a requirements file:
-# setuptools
+typing-extensions==4.11.0
+    # via
+    #   black
+    #   mypy
