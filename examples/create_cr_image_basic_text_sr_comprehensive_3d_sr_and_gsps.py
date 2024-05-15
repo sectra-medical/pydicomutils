@@ -2,6 +2,7 @@ import os
 import glob
 import logging
 from datetime import datetime
+import math
 
 import pandas
 import imageio
@@ -9,6 +10,11 @@ import imageio
 from pydicomutils.IODs.CRImage import CRImage
 from pydicomutils.IODs.GSPS import GSPS
 from pydicomutils.IODs.BasicSRText import BasicSRText
+from pydicomutils.IODs.Comprehensive3DSRTID1500 import (
+    Comprehensive3DSRTID1500,
+    ConceptCodeSequenceItem,
+    ConceptNameCodeSequenceItem,
+)
 
 # Create logger
 logger = logging.getLogger(__name__)
@@ -22,18 +28,8 @@ stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
 
 
-def create_points_for_rectangle(x, y, width, height):
-    """Simple helper function to create points for a rectangle
-
-    Arguments:
-        x {int} -- [description]
-        y {int} -- [description]
-        width {int} -- [description]
-        height {int} -- [description]
-
-    Returns:
-        [int] -- [description]
-    """
+def create_corner_points_for_rectangle_from_xywidthheight(x, y, width, height):
+    """Simple helper function to create corner points for a rectangle given the top left corner and width and height"""
     points = []
     points.append(x)
     points.append(y)
@@ -47,6 +43,54 @@ def create_points_for_rectangle(x, y, width, height):
     points.append(y)
 
     return points
+
+
+def create_center_point_from_xywidthheight(x, y, width, height):
+    """Simple helper function to create center point for a rectangle given the top left corner and width and height"""
+    points = []
+    # Center point
+    points.append(x + width / 2.0)
+    points.append(y + height / 2.0)
+
+    return points
+
+
+def create_circle_points_from_xywidthheight(x, y, width, height):
+    """Simple helper function to create a circle enclosing a rectangle given the top left corner and width and height"""
+    points = []
+    # Center point
+    points.append(x + width / 2.0)
+    points.append(y + height / 2.0)
+    # Point on the circle
+    points.append(x + width)
+    points.append(y + height)
+
+    return points
+
+
+def create_octagon_points_from_xywidthheight(x, y, width, height):
+    """Simple helper function to create an octagon enclosed by a rectangle given the top left corner and width and height"""
+    # Calculate the center of the bounding box
+    cx = x + width / 2
+    cy = y + height / 2
+
+    # Calculate the radius of the circumscribed circle
+    # The radius should be such that the octagon fits within the bounding box
+    radius = min(width, height) / (2 * math.sin(math.pi / 8))
+
+    # Calculate the angle between each vertex
+    angle_step = 2 * math.pi / 8
+
+    # Generate the vertices of the octagon
+    vertices = []
+    for i in range(8):
+        angle = angle_step * i
+        px = cx + radius * math.cos(angle)
+        py = cy + radius * math.sin(angle)
+        vertices.append(px)
+        vertices.append(py)
+
+    return vertices
 
 
 def run():
@@ -164,7 +208,9 @@ def run():
             basic_text_sr.create_empty_iod()
             basic_text_sr.initiate(referenced_dcm_files=referenced_dcm_files)
             basic_text_sr.set_dicom_attribute("SeriesNumber", "300")
-            basic_text_sr.set_dicom_attribute("SeriesDescription", "SR Report")
+            basic_text_sr.set_dicom_attribute(
+                "SeriesDescription", "Basic Text SR Report"
+            )
             basic_text_sr.set_dicom_attribute(
                 "SeriesDate", datetime.now().strftime("%Y%m%d")
             )
@@ -188,7 +234,7 @@ def run():
             )
             basic_text_sr.write_to_file(output_file)
 
-            # Create GSPS
+            # Create GSPS and Comprehensive 3D SR TID 1500
             if study_df.iloc[0]["ImageIndex"] in df_bbox_entries["ImageIndex"].unique():
                 logger.info("GSPS")
                 bbox_df = df_bbox_entries[
@@ -226,7 +272,7 @@ def run():
                 gsps.add_graphic_object(
                     referenced_dcm_files[0],
                     "FINDINGANDBBOX",
-                    create_points_for_rectangle(
+                    create_corner_points_for_rectangle_from_xywidthheight(
                         bbox_x, bbox_y, bbox_width, bbox_height
                     ),
                     "POLYLINE",
@@ -245,6 +291,135 @@ def run():
                     "pr.dcm",
                 )
                 gsps.write_to_file(output_file, write_like_original=False)
+
+                logger.info("Comprehensive 3D SR TID 1500")
+                comprehensive_3d_sr = Comprehensive3DSRTID1500(
+                    referenced_dcms=referenced_dcm_files
+                )
+                comprehensive_3d_sr.set_dicom_attribute("SeriesNumber", "350")
+                comprehensive_3d_sr.set_dicom_attribute(
+                    "SeriesDescription", "Comprehensive 3D SR TID 1500 Report"
+                )
+                comprehensive_3d_sr.set_dicom_attribute(
+                    "SeriesDate", datetime.now().strftime("%Y%m%d")
+                )
+                comprehensive_3d_sr.set_dicom_attribute(
+                    "SeriesTime", datetime.now().strftime("%H%M%S")
+                )
+                if bbox_df.iloc[0]["FindingLabel"] == "Atelectasis":
+                    finding_type = ConceptCodeSequenceItem(
+                        "46621007",
+                        "SCT",
+                        "Atelectasis",
+                    )
+                elif bbox_df.iloc[0]["FindingLabel"] == "Cardiomegaly":
+                    finding_type = ConceptCodeSequenceItem(
+                        "8186001",
+                        "SCT",
+                        "Cardiomegaly",
+                    )
+                elif bbox_df.iloc[0]["FindingLabel"] == "Pleural effusion":
+                    finding_type = ConceptCodeSequenceItem(
+                        "60046008",
+                        "SCT",
+                        "Pleural effusion",
+                    )
+                elif bbox_df.iloc[0]["FindingLabel"] == "Infiltrate":
+                    finding_type = ConceptCodeSequenceItem(
+                        "409609008",
+                        "SCT",
+                        "Pulmonary infiltrate",
+                    )
+                else:
+                    finding_type = "OTHER"
+                # Add finding with no location
+                comprehensive_3d_sr.add_qualitative_finding(
+                    referenced_dcm_files[0],
+                    finding_type,
+                    tracking_id="Finding",
+                    finding_site=ConceptCodeSequenceItem(
+                        "39607008",
+                        "SCT",
+                        "Lung",
+                    ),
+                )
+                # Add finding with location as point
+                comprehensive_3d_sr.add_qualitative_finding(
+                    referenced_dcm_files[0],
+                    finding_type,
+                    tracking_id="FindingWithPoint",
+                    finding_site=ConceptCodeSequenceItem(
+                        "39607008",
+                        "SCT",
+                        "Lung",
+                    ),
+                    location_data=create_center_point_from_xywidthheight(
+                        bbox_x, bbox_y, bbox_width, bbox_height
+                    ),
+                    location_type="POINT",
+                )
+                # Add finding with location as polyline
+                comprehensive_3d_sr.add_qualitative_finding(
+                    referenced_dcm_files[0],
+                    finding_type,
+                    tracking_id="FindingWithRectangle",
+                    finding_site=ConceptCodeSequenceItem(
+                        "39607008",
+                        "SCT",
+                        "Lung",
+                    ),
+                    location_data=create_corner_points_for_rectangle_from_xywidthheight(
+                        bbox_x, bbox_y, bbox_width, bbox_height
+                    ),
+                    location_type="POLYLINE",
+                )
+                # Add finding with location as circle
+                comprehensive_3d_sr.add_qualitative_finding(
+                    referenced_dcm_files[0],
+                    finding_type,
+                    tracking_id="FindingWithCircle",
+                    finding_site=ConceptCodeSequenceItem(
+                        "39607008",
+                        "SCT",
+                        "Lung",
+                    ),
+                    location_data=create_circle_points_from_xywidthheight(
+                        bbox_x, bbox_y, bbox_width, bbox_height
+                    ),
+                    location_type="CIRCLE",
+                )
+                # Add finding with region as contour
+                comprehensive_3d_sr.add_qualitative_finding(
+                    referenced_dcm_files[0],
+                    finding_type,
+                    tracking_id="FindingWithRegion",
+                    finding_site=ConceptCodeSequenceItem(
+                        "39607008",
+                        "SCT",
+                        "Lung",
+                    ),
+                    contour_data=create_octagon_points_from_xywidthheight(
+                        bbox_x, bbox_y, bbox_width, bbox_height
+                    ),
+                    contour_type="POLYLINE",
+                )
+                # Write file to disk
+                os.makedirs(
+                    os.path.join(
+                        study_folder,
+                        "series_"
+                        + str(comprehensive_3d_sr.dataset.SeriesNumber).zfill(3),
+                    ),
+                    exist_ok=True,
+                )
+                output_file = os.path.join(
+                    study_folder,
+                    "series_" + str(comprehensive_3d_sr.dataset.SeriesNumber).zfill(3),
+                    "comprehensive3dsr.dcm",
+                )
+                comprehensive_3d_sr.write_to_file(
+                    output_file, write_like_original=False
+                )
 
 
 if __name__ == "__main__":
