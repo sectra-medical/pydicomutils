@@ -510,6 +510,11 @@ class Comprehensive3DSRTID1500(IOD):
                     {
                         "RelationshipType": "CONTAINS",
                         "ValueType": "SCOORD",
+                        "ConceptNameCodeSequence": [
+                            ConceptNameCodeSequenceItem(
+                                "111030", "DCM", "Image Region"
+                            ).as_dict()
+                        ],
                         "ContentSequence": [
                             {
                                 "ReferencedSOPSequence": [
@@ -536,6 +541,11 @@ class Comprehensive3DSRTID1500(IOD):
                     {
                         "RelationshipType": "CONTAINS",
                         "ValueType": "SCOORD",
+                        "ConceptNameCodeSequence": [
+                            ConceptNameCodeSequenceItem(
+                                "111030", "DCM", "Image Region"
+                            ).as_dict()
+                        ],
                         "ContentSequence": [
                             {
                                 "ReferencedSOPSequence": [
