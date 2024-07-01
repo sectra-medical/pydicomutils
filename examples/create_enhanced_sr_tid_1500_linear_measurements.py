@@ -70,7 +70,7 @@ def run():
         23.1,
         [302, 380, 328, 361],
         ["103340004", "SCT", "Short Axis"],
-        ["5298800", "SCT", "Lesion"],
+        ["52988006", "SCT", "Lesion"],
         ["39607008", "SCT", "Lung"],
         coded_values=[
             {
