@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydicom import Dataset, read_file, uid
+from pydicom import Dataset, dcmread, uid
 
 from .IOD import IOD, IODTypes, SOP_CLASS_UID_MODALITY_DICT
 from .modules.specific_sr_modules import (
@@ -65,7 +65,7 @@ class KOS(IOD):
         super().initiate()
         if referenced_dcm_files:
             # some attributes to inherit from referenced dcm files
-            ds = read_file(referenced_dcm_files[0])
+            ds = dcmread(referenced_dcm_files[0])
             self.dataset.PatientID = ds.PatientID
             self.dataset.PatientName = ds.PatientName
             self.dataset.PatientSex = ds.PatientSex
@@ -117,7 +117,7 @@ class KOS(IOD):
         if referenced_frames is None:
             for referenced_dcm_file in referenced_dcm_files:
                 ds = Dataset()
-                ds_ref = read_file(referenced_dcm_file)
+                ds_ref = dcmread(referenced_dcm_file)
                 ds.ReferencedSOPSequence = generate_sequence(
                     "ReferencedSOPSequence",
                     [
@@ -141,7 +141,7 @@ class KOS(IOD):
                     referenced_dcm_files, referenced_frames
                 ):
                     ds = Dataset()
-                    ds_ref = read_file(referenced_dcm_file)
+                    ds_ref = dcmread(referenced_dcm_file)
                     ds.ReferencedSOPSequence = generate_sequence(
                         "ReferencedSOPSequence",
                         [

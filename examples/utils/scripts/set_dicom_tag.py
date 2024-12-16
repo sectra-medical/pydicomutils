@@ -1,6 +1,7 @@
 """create_new_uids.py:
 Script to set value of specified DICOM tag in DICOM objects available in specified folder.
 """
+
 import os
 import argparse
 import glob
@@ -36,7 +37,7 @@ def set_dicom_tag(folder, dicom_tag, VR, value, dry_run=True):
             dcm.add_new(dicom_tag, VR, value)
         if not dry_run:
             # write dcm file to disk
-            pydicom.write_file(dcm_file, dcm, write_like_original=False)
+            pydicom.dcmwrite(dcm_file, dcm, write_like_original=False)
     if dry_run:
         print("Values of DICOM tag", dicom_tag, "that will be replaced with", value)
         print(list(replaced_dcm_values))

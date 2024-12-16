@@ -2,6 +2,7 @@
 Script to create new UIDs for specified DICOM tag in DICOM objects available
 in specified folder.
 """
+
 import os
 import glob
 import argparse
@@ -38,7 +39,7 @@ def create_new_uids(folder, dicom_tag, dry_run=True):
             dcm[dicom_tag] = DataElement(int(dicom_tag, 16), "UI", uid)
         if not dry_run:
             # write dcm file to disk
-            pydicom.write_file(dcm_file, dcm, write_like_original=False)
+            pydicom.dcmwrite(dcm_file, dcm, write_like_original=False)
     if dry_run:
         print("Uids to update")
         print(dcm_file)

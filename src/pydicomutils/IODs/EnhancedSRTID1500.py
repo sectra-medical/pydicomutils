@@ -741,7 +741,10 @@ class EnhancedSRTID1500(IOD):
             tracking_id = "".join(random.choice("0123456789ABCDEF") for i in range(16))
         if not tracking_uid:
             tracking_uid = generate_uid()
-        ds_ref = dcmread(dcm_file)
+        if isinstance(dcm_file, str):
+            ds_ref = dcmread(dcm_file)
+        else:
+            ds_ref = dcm_file
         ds = self.initiate_measurement_group()
         ds.ContentSequence = self.initiate_content_sequence(
             tracking_id, tracking_uid, finding, finding_site

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydicom import Dataset, read_file
+from pydicom import Dataset, dcmread
 
 from .IOD import IOD, IODTypes, SOP_CLASS_UID_MODALITY_DICT
 from .modules.specific_presentation_state_modules import PresentationSeriesModule
@@ -60,7 +60,7 @@ class GSPS(IOD):
         super().initiate()
         if referenced_dcm_files:
             # some attributes to inherit from referenced dcm files
-            ds = read_file(referenced_dcm_files[0])
+            ds = dcmread(referenced_dcm_files[0])
             self.dataset.PatientID = ds.PatientID
             self.dataset.PatientName = ds.PatientName
             self.dataset.PatientSex = ds.PatientSex
@@ -137,7 +137,7 @@ class GSPS(IOD):
             line_thickness {[type]} -- [description] (default: {None})
         """
         ds = Dataset()
-        ds_ref = read_file(referenced_dcm_file)
+        ds_ref = dcmread(referenced_dcm_file)
         ds.ReferencedImageSequence = generate_sequence("ReferencedImageSequence", 
                                                        [{
                                                            "ReferencedSOPClassUID": ds_ref.SOPClassUID,
@@ -187,7 +187,7 @@ class GSPS(IOD):
             shadow_style {[type]} -- [description] (default: {None})
         """
         ds = Dataset()
-        ds_ref = read_file(referenced_dcm_file)
+        ds_ref = dcmread(referenced_dcm_file)
         ds.ReferencedImageSequence = generate_sequence("ReferencedImageSequence", 
                                                        [{
                                                            "ReferencedSOPClassUID": ds_ref.SOPClassUID,

@@ -7,8 +7,8 @@ from pydicom import (
     FileDataset,
     DataElement,
     Sequence,
-    write_file,
-    read_file,
+    dcmwrite,
+    dcmread,
     uid,
 )
 from pydicom.datadict import tag_for_keyword, dictionary_VR
@@ -225,4 +225,4 @@ class IOD:
         ----------
         output_file : Complete path of file to write to
         """
-        write_file(output_file, self.dataset, write_like_original=write_like_original)
+        dcmwrite(output_file, self.dataset, write_like_original=write_like_original)

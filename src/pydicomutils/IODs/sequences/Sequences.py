@@ -1,6 +1,6 @@
 import json
 
-from pydicom import Sequence, Dataset, read_file, DataElement
+from pydicom import Sequence, Dataset, dcmread, DataElement
 from pydicom.datadict import tag_for_keyword, dictionary_VM, dictionary_VR
 from pydicom.uid import generate_uid
 
@@ -195,7 +195,7 @@ def generate_reference_sop_sequence_json(dcm):
     if isinstance(dcm, Dataset):
         ds = dcm
     else:
-        ds = read_file(dcm)
+        ds = dcmread(dcm)
     return {
         "ReferencedSOPSequence": [
             {
@@ -276,7 +276,7 @@ def generate_DAS_sequence(dcms):
             "DisplayedAreaBottomRightHandCorner": [int(ds.Columns), int(ds.Rows)],
             "PresentationSizeMode": "SCALE TO FIT",
         }
-        for ds in [read_file(dcm_file) for dcm_file in dcms]
+        for ds in [dcmread(dcm_file) for dcm_file in dcms]
     ]
     return generate_sequence("DisplayedAreaSelectionSequence", sequence_data)
 
@@ -293,7 +293,7 @@ def generate_RS_sequence(dcms):
     """
     sequence_content = dict()
     for dcm_file in dcms:
-        ds = read_file(dcm_file)
+        ds = dcmread(dcm_file)
         if ds.SeriesInstanceUID not in sequence_content:
             sequence_content[ds.SeriesInstanceUID] = list()
         sequence_content[ds.SeriesInstanceUID].append(
@@ -327,7 +327,7 @@ def generate_CRPES_sequence(dcms):
         if isinstance(dcm, Dataset):
             ds = dcm
         else:
-            ds = read_file(dcm)
+            ds = dcmread(dcm)
         if ds.StudyInstanceUID not in sequence_content:
             sequence_content[ds.StudyInstanceUID] = dict()
         if ds.SeriesInstanceUID not in sequence_content[ds.StudyInstanceUID]:
