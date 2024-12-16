@@ -46,15 +46,18 @@ def run():
 
     # Create dict of dicom objects
     sop_instance_uid_to_dcm_file = dict()
+    referenced_ds = []
     for dcm_file in referenced_dcm_files:
         ds = read_file(dcm_file)
         sop_instance_uid_to_dcm_file[ds.SOPInstanceUID] = dcm_file
+        ds.StudyTime = "000000"
+        referenced_ds.append(ds)
 
     # Create enhaned SR objects according to TID 1500 with linear measurements
     logger.info("Enhanced SR TID 1500")
     enhanced_sr = EnhancedSRTID1500()
     enhanced_sr.create_empty_iod()
-    enhanced_sr.initiate(referenced_dcm_files)
+    enhanced_sr.initiate(referenced_ds)
     enhanced_sr.set_dicom_attribute("Manufacturer", "Company Inc.")
     enhanced_sr.set_dicom_attribute("SeriesNumber", "400")
     enhanced_sr.set_dicom_attribute("SeriesDescription", "Imaging Measurement Report")
